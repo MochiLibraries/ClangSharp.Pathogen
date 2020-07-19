@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    
+    <!-- Package Info -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>0.0.0-alpha</Version>
+    <Description>C# bindings for libclang Pathogen Extensions and other utilities for working with ClangSharp.</Description>
+    <Authors>David Maas and Contributors</Authors>
+    <Copyright>Copyright David Maas and Contributors</Copyright>
+    <IncludeSymbols>true</IncludeSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ClangSharp" Version="10.0.0-beta" />
+  </ItemGroup>
+  <ItemGroup>
+    <!--
+      Do not use ReferenceOutputAssembly="false" here even though the reference isn't needed (and ClangSharp.Pathogen.Runtime.dll is essentially empty.)
+      The reference to the assembly will be dropped during emit, and this needs to be a normal reference so that the generated NuGet package depends on the ClangSharp.Pathogen.Runtime package.
+    -->
+    <ProjectReference Include="..\ClangSharp.Pathogen.Runtime\ClangSharp.Pathogen.Runtime.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\LICENSE.txt" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+</Project>

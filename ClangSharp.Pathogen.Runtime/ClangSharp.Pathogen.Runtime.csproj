@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    
+    <!-- Paths to LLVM things -->
+    <LibClangPathogenPath>$(MSBuildThisFileDirectory)../build/bin/libclang.dll</LibClangPathogenPath>
+    <PathogenExtensionsCppPath>$(MSBuildThisFileDirectory)../external/llvm-project/clang/tools/libclang/PathogenExtensions.cpp</PathogenExtensionsCppPath>
+    <LicenseFilePath>$(MSBuildThisFileDirectory)../external/llvm-project/clang/LICENSE.TXT</LicenseFilePath>
+    
+    <!-- Package Info -->
+    <!--
+    In theory this should be the SPDX expression for LLVM.
+    However, due to https://github.com/NuGet/Home/issues/8027 I think it's better to just include the license file in this case
+    so that the developer can more clearly see the pseudo-dual licensing thing they have going on.
+    <PackageLicenseExpression>(Apache-2.0 WITH LLVM-exception) OR NCSA</PackageLicenseExpression>
+    -->
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/InfectedLibraries/llvm-project.git</RepositoryUrl>
+    <Version>0.0.0-alpha</Version>
+    <Description>Runtime package for ClangSharp.Pathogen, not intended for direct consumption.</Description>
+    <Authors>LLVM Team and David Maas</Authors>
+    <!-- LLVM does not have a good canonical copyright string. They're supposed to put it in their source file as part of Apache 2.0 but they don't. -->
+    <Copyright>Pathogen extensions copyright David Maas and Contributors. LLVM copyright (c) 2003-2019 University of Illinois at Urbana-Champaign, LLVM Team.</Copyright>
+    
+    <!-- This package is only for native runtime, don't try to build/pack the .NET assembly or specify a framework dependency -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Condition="Exists('$(PathogenExtensionsCppPath)')" Include="$(PathogenExtensionsCppPath)" Link="PathogenExtensions.cpp" />
+    <None Condition="Exists('$(LicenseFilePath)')" Include="$(LicenseFilePath)" Link="LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup Condition="Exists('$(LibClangPathogenPath)')">
+    <None Include="$(LibClangPathogenPath)" Link="libclang-pathogen.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>true</Pack>
+      <PackagePath>runtimes/win-x64/native/libclang-pathogen.dll</PackagePath>
+    </None>
+  </ItemGroup>
+  <!-- Error if native runtime needs to be built or llvm-project is missing -->
+  <Target Name="_NativeRuntimeChecks" BeforeTargets="Pack">
+    <Error Text="PathogenExtensions.cpp is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(PathogenExtensionsCppPath)')" />
+    <Error Text="Clang LICENSE.TXT is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(LicenseFilePath)')" />
+    <Error Text="Custom libclang.dll is missing, run `build-native.cmd` in the solution root to build it." Condition="!Exists('$(LibClangPathogenPath)')" />
+  </Target>
+</Project>

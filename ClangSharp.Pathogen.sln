@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30309.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClangSharp.Pathogen", "ClangSharp.Pathogen\ClangSharp.Pathogen.csproj", "{ADCA9D07-0CAB-4D1F-92DD-69189D520EFB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClangSharp.Pathogen.Runtime", "ClangSharp.Pathogen.Runtime\ClangSharp.Pathogen.Runtime.csproj", "{3A053B1B-DB74-48A3-994C-16C48AA2378A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D91EF5C2-A8C3-450F-9369-2A6E1BA256C4}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ADCA9D07-0CAB-4D1F-92DD-69189D520EFB}.Debug|x64.ActiveCfg = Debug|x64
+		{ADCA9D07-0CAB-4D1F-92DD-69189D520EFB}.Debug|x64.Build.0 = Debug|x64
+		{ADCA9D07-0CAB-4D1F-92DD-69189D520EFB}.Release|x64.ActiveCfg = Release|x64
+		{ADCA9D07-0CAB-4D1F-92DD-69189D520EFB}.Release|x64.Build.0 = Release|x64
+		{3A053B1B-DB74-48A3-994C-16C48AA2378A}.Debug|x64.ActiveCfg = Debug|x64
+		{3A053B1B-DB74-48A3-994C-16C48AA2378A}.Debug|x64.Build.0 = Debug|x64
+		{3A053B1B-DB74-48A3-994C-16C48AA2378A}.Release|x64.ActiveCfg = Release|x64
+		{3A053B1B-DB74-48A3-994C-16C48AA2378A}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {47AC6DA4-5EC6-411A-B1CF-87D618F321DF}
+	EndGlobalSection
+EndGlobal
