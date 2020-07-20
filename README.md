@@ -22,6 +22,8 @@ Tool | Recommended Version
 [Ninja](https://ninja-build.org/) | 1.10.0
 [Visual Studio 2019](https://visualstudio.microsoft.com/vs/) | 16.6.4
 
+If [sccache](https://github.com/mozilla/sccache) (0.2.12 recommended) is present on your path it will automatically be used to acellerate subsequent builds.
+
 ### Build Steps
 
 1. Ensure Git submodules are up-to-date with `git submodule update --init --recursive`
