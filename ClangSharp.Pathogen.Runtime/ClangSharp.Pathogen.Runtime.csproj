@@ -18,7 +18,6 @@
     <PackageLicenseExpression>(Apache-2.0 WITH LLVM-exception) OR NCSA</PackageLicenseExpression>
     -->
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <RepositoryUrl>https://github.com/InfectedLibraries/llvm-project.git</RepositoryUrl>
     <Version>0.0.0-alpha</Version>
     <Description>Runtime package for ClangSharp.Pathogen, not intended for direct consumption.</Description>
     <Authors>LLVM Team and David Maas</Authors>
