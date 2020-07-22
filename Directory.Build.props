@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <!-- Common C# Properties -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Features>strict</Features>
@@ -16,7 +15,7 @@
     <!-- Emit modern symbol packages -->
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <!-- Enable Source Link -->
     <!--
       Even though it isn't useful for ClangSharp.Pathogen.Runtime, we still want to enable this
