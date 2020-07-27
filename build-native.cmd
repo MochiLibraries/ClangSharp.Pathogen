@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 :: Initialize Visual Studio dev tools
-call vs-tools
+call tooling\vs-tools
 
 :: Initialize cmake (if necessary)
 if not exist build\build.ninja (
