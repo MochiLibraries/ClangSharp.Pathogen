@@ -23,4 +23,7 @@
     -->
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
   </ItemGroup>
+
+  <!-- Import versioning logic -->
+  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj'" Project="tooling/Versioning.props" />
 </Project>

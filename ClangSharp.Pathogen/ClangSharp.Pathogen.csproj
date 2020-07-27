@@ -7,7 +7,7 @@
     
     <!-- Package Info -->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>0.0.0-alpha</Version>
+    <VersionPrefix>0.0.0</VersionPrefix>
     <Description>C# bindings for libclang Pathogen Extensions and other utilities for working with ClangSharp.</Description>
     <Authors>David Maas and Contributors</Authors>
     <Copyright>Copyright David Maas and Contributors</Copyright>

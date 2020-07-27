@@ -18,7 +18,8 @@
     <PackageLicenseExpression>(Apache-2.0 WITH LLVM-exception) OR NCSA</PackageLicenseExpression>
     -->
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <Version>0.0.0-alpha</Version>
+    <VersionPrefix>0.0.0</VersionPrefix>
+    <IncludeLlvmSourceRevisionInVersion>true</IncludeLlvmSourceRevisionInVersion>
     <Description>Runtime package for ClangSharp.Pathogen, not intended for direct consumption.</Description>
     <Authors>LLVM Team and David Maas</Authors>
     <!-- LLVM does not have a good canonical copyright string. They're supposed to put it in their source file as part of Apache 2.0 but they don't. -->
@@ -40,7 +41,7 @@
     </None>
   </ItemGroup>
   <!-- Error if native runtime needs to be built or llvm-project is missing -->
-  <Target Name="_NativeRuntimeChecks" BeforeTargets="Pack">
+  <Target Name="_NativeRuntimeChecks" BeforeTargets="Build;Pack">
     <Error Text="PathogenExtensions.cpp is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(PathogenExtensionsCppPath)')" />
     <Error Text="Clang LICENSE.TXT is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(LicenseFilePath)')" />
     <Error Text="Custom libclang.dll is missing, run `build-native.cmd` in the solution root to build it." Condition="!Exists('$(LibClangPathogenPath)')" />

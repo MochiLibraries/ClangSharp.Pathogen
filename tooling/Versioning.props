@@ -1,0 +1,82 @@
+<!-- ==============================================================================================
+This file enforces consistent version conventions for ClangSharp.Pathogen packages.
+
+Releases fall into four different kinds:
+*    Development - Day-to-date builds made on an individual developer's machine
+*        CiBuild - Builds which come out of routine continuous integration runs (IE: nightlies)
+* PreviewRelease - Manually-initiated CI preview builds intended for public testing.
+*    FullRelease - Manually-initiated CI builds ready for public consumption.
+
+Release kinds are selected as follows:
+| Release kind   | ContinuousIntegrationBuild | ContinuousIntegrationBuildKind | Configuration |
+|    Development | false                      | N/A                            | N/A           |
+|        CiBuild | true                       | N/A                            | N/A           |
+| PreviewRelease | true                       | PreviewRelease                 | N/A           |
+|    FullRelease | true                       | FullRelease                    | Release       |
+
+Some release kinds have extra configuration:
+
+=== CiBuild ===
+ContinousIntegrationRunNumber - (Required) This is a unique number which identifies the CI build. (IE: github.run_number)
+
+=== PreviewRelease ===
+PreviewReleaseVersion - (Required) This is the pre-release version suffix. (IE: preview0, preview1, preview2.)
+
+=== All ===
+ForkName - (Optional) This is an extra identifier added to clarify the origin of the build when it comes from a fork.
+
+Additionally, setting IncludeLlvmSourceRevisionInVersion to true will cause the revision of LLVM to be appended to the build metadata.
+(This is currently used with ClangSharp.Pathogen.Runtime to make it easier to identify the previsie revision of LLVM being used.)
+
+Here are examples of the version numbers created by various release kinds:
+* Development    - 1.0.0-devED6B14647+ccb25b7c90c19810186836b744f394b048aa672b.LLVM-10.0.0
+* Development    - 1.0.0-devED6B14647+ccb25b7c90c19810186836b744f394b048aa672b.LLVM-10.0.0.649267915dbdc94604b0a46513c7b8aed000d84c  (IncludeLlvmSourceRevisionInVersion = 'true')
+* CiBuild        - 1.0.0-ci99+ccb25b7c90c19810186836b744f394b048aa672b.LLVM-10.0.0  (ContinousIntegrationRunSuffix = '99')
+* CiBuild        - 1.0.0-ci99.PathogenDavid+ccb25b7c90c19810186836b744f394b048aa672b.LLVM-10.0.0  (ForkName = 'PathogenDavid')
+* PreviewRelease - 1.0.0-preview0+ccb25b7c90c19810186836b744f394b048aa672b.LLVM-10.0.0 (PreviewRelease = 'preview0')
+* FullRelease    - 1.0.0+ccb25b7c90c19810186836b744f394b048aa672b.LLVM-10.0.0
+* FullRelease    - 1.0.0+ccb25b7c90c19810186836b744f394b048aa672b.LLVM-10.0.0.PathogenDavid (ForkName = 'PathogenDavid', not recommended.)
+
+These versions may seem obnoxiously verbose, but the build metadata is usually stripped in places like NuGet.org and Visual Studio where bevity matters.
+=============================================================================================== -->
+<Project>
+  <PropertyGroup>
+    <!-- Default to version 0.0.0 -->
+    <VersionPrefix Condition="'$(VersionPrefix)' == ''">0.0.0</VersionPrefix>
+
+    <!-- Don't use the SDK's built-in support for appending the Git revision. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  
+    <!--
+    Determine the release kind
+    Projects should never change this!
+    Releases should always come out of CI.
+    If you *have* to do a one-off release build without CI for some reason, you should still enable ContinuousIntegrationBuild since it removes your absolute paths from symbol files.
+    -->
+    <ReleaseKind>Development</ReleaseKind>
+    <ReleaseKind Condition="'$(ContinuousIntegrationBuild)' == 'true'">CiBuild</ReleaseKind>
+    <ReleaseKind Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(ContinuousIntegrationBuildKind)' == 'PreviewRelease'">PreviewRelease</ReleaseKind>
+    <ReleaseKind Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(ContinuousIntegrationBuildKind)' == 'FullRelease'">FullRelease</ReleaseKind>
+
+    <!-- If ForkName is specified, prepend with a . for use below -->
+    <_ForkNameWithDot></_ForkNameWithDot>
+    <_ForkNameWithDot Condition="'$(ForkName)' != ''">.$(ForkName)</_ForkNameWithDot>
+
+    <!-- Determine version suffix -->
+    <VersionSuffix></VersionSuffix>
+    <VersionSuffix Condition="'$(ReleaseKind)' == 'PreviewRelease'">$(PreviewReleaseVersion)$(_ForkNameWithDot)</VersionSuffix>
+    <VersionSuffix Condition="'$(ReleaseKind)' == 'CiBuild'">ci$(ContinousIntegrationRunNumber)$(_ForkNameWithDot)</VersionSuffix>
+    
+    <_DevelopmentVersionNumber Condition="'$(ReleaseKind)' == 'Development'">$([MSBuild]::Divide($([System.DateTime]::UtcNow.Ticks), $([System.TimeSpan]::TicksPerSecond)).ToString(`X`))</_DevelopmentVersionNumber>
+    <VersionSuffix Condition="'$(ReleaseKind)' == 'Development'">dev$(_DevelopmentVersionNumber)$(_ForkNameWithDot)</VersionSuffix>
+  </PropertyGroup>
+
+  <!-- Import LLVM version file -->
+  <PropertyGroup>
+    <LlvmVersionFilePath>$(MSBuildThisFileDirectory)../external/llvm-project/Version.props</LlvmVersionFilePath>
+  </PropertyGroup>
+  <Import Condition="Exists('$(LlvmVersionFilePath)')" Project="$(LlvmVersionFilePath)" />
+  <Target Name="_LlvmVersionFileCheck" BeforeTargets="DetermineVersionNumbers;Build;Pack">
+    <Error Text="LLVM Version.props is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(LlvmVersionFilePath)')" />
+  </Target>
+</Project>

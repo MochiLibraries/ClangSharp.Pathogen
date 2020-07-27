@@ -7,4 +7,7 @@
     <PackageOutputPath>$(MSBuildThisFileDirectory)packages/</PackageOutputPath>
     <PackageOutputPath Condition="'$(Configuration)'!='Release'">$(PackageOutputPath)$(Configuration)/</PackageOutputPath>
   </PropertyGroup>
+
+  <!-- Import versioning logic -->
+  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj'" Project="tooling/Versioning.targets" />
 </Project>

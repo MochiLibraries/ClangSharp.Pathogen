@@ -1,0 +1,42 @@
+<!-- ==============================================================================================
+This file enforces consistent version conventions for ClangSharp.Pathogen packages.
+Specifically, it appends the build metadata (the parts after the +)
+See Versioning.props for details.
+=============================================================================================== -->
+<Project>
+  <!-- Target to retrieve LLVM's source control revision from SourceLink -->
+  <Target Name="DetermineLlvmSourceRevision">
+    <PropertyGroup>
+      <LlvmSourceRevision Condition="'%(SourceRoot.NestedRoot)' == 'external/llvm-project/'">%(SourceRoot.RevisionId)</LlvmSourceRevision>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Validates version number logic and appends build metadata to the version number -->
+  <Target Name="ValidateAndAppendBuildMetadataToVersionNumber" BeforeTargets="GetAssemblyVersion;GenerateNuspec" DependsOnTargets="InitializeSourceControlInformation;DetermineLlvmSourceRevision">
+    <!-- Source control information must be supported -->
+    <Error Text="Source control information must be available." Condition="'$(SourceControlInformationFeatureSupported)' != 'true'" />
+
+    <!-- Complain when the LLVM source revision is missing when it's needed -->
+    <Error Text="Could not determine the source code revision used for LLVM." Condition="'$(LlvmSourceRevision)' == '' and '$(IncludeLlvmSourceRevisionInVersion)' == 'true'" />
+
+    <!-- Per-kind validation -->
+    <Error Text="ContinousIntegrationRunNumber must be specified for CiBuild releases!" Condition="'$(ReleaseKind)' == 'CiBuild' and '$(ContinousIntegrationRunNumber)' == ''" />
+    <Error Text="PreviewReleaseVersion must be specified for preview releases!" Condition="'$(ReleaseKind)' == 'PreviewRelease' and '$(PreviewReleaseVersion)' == ''" />
+    <Error Text="Don't use non-release configuration for release builds!" Condition="'$(ReleaseKind)' == 'FullRelease' and '$(Configuration)' != 'Release'" />
+    <Warning Text="Forks should not create full release builds!" Condition="'$(ReleaseKind)' == 'FullRelease' and '$(_ForkNameWithDot)' != ''" />
+
+    <!-- Append the build metadata -->
+    <PropertyGroup>
+      <LlvmVersionSuffix>LLVM-$(LlvmBaseVersion)</LlvmVersionSuffix>
+      <LlvmVersionSuffix Condition="'$(IncludeLlvmSourceRevisionInVersion)' == 'true'">$(LlvmVersionSuffix).$(LlvmSourceRevision)</LlvmVersionSuffix>
+
+      <Version>$(Version)+$(SourceRevisionId).$(LlvmVersionSuffix)</Version>
+
+      <!-- Shove the fork name in the build metadata when it's present for full releases. -->
+      <Version Condition="'$(ReleaseKind)' == 'FullRelease' and '$(ForkName)' != ''">$(Version).$(ForkName)</Version>
+
+      <!-- Apply the updated version to NuGet -->
+      <PackageVersion>$(Version)</PackageVersion>
+    </PropertyGroup>
+  </Target>
+</Project>
