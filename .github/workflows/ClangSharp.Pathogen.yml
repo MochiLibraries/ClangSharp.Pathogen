@@ -1,0 +1,211 @@
+name: ClangSharp.Pathogen
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      will_publish_packages:
+        description: "Publish packages?"
+        default: "false"
+      preview_release_version:
+        description: "Preview release version"
+        default: ""
+      do_full_release:
+        description: "Full release?"
+        default: "false"
+jobs:
+  build-llvm:
+    name: Build LLVM
+    runs-on: windows-latest
+    steps:
+      # ----------------------------------------------------------------------- Checkout
+      - name: Checkout
+        # We intentionally don't checkout submodules here
+        # They will be restored as needed only if we need to build LLVM.
+        uses: actions/checkout@v2
+
+      # ----------------------------------------------------------------------- Setup Python
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      # ----------------------------------------------------------------------- Get LLVM Revision
+      - name: Get LLVM Revision
+        id: llvm
+        run: python .github/workflows/get-llvm-revision.py
+
+      # ----------------------------------------------------------------------- Build LLVM
+      - name: Load cached LLVM build outputs
+        id: cached-llvm
+        uses: actions/cache@v2
+        with:
+          key: llvm-output-${{runner.os}}-${{steps.llvm.outputs.revision}}
+          # These are the paths of the external files required in ClangSharp.Pathogen.Runtime.csproj
+          # (Version.props is required by tooling/Versioning.props)
+          # (Make sure this is syncronized with "Archive LLVM Outputs" below)
+          path: build/bin/libclang.dll
+
+      - name: Checkout LLVM
+        if: steps.cached-llvm.outputs.cache-hit != 'true'
+        run: git submodule update --init --recursive --depth=1
+
+      - name: Install sccache
+        id: sccache
+        if: steps.cached-llvm.outputs.cache-hit != 'true'
+        run: python .github/workflows/install-sccache.py
+
+      - name: Load LLVM sccache
+        id: cached-sccache
+        if: steps.cached-llvm.outputs.cache-hit != 'true'
+        uses: actions/cache@v2
+        with:
+          path: ${{steps.sccache.outputs.root-directory}}
+          key: sccache-cache-${{runner.os}}-${{steps.llvm.outputs.revision}}
+          restore-keys: sccache-cache-${{runner.os}}-
+
+      - name: Build LLVM
+        if: steps.cached-llvm.outputs.cache-hit != 'true'
+        run: ./build-native.cmd
+
+      - name: Show sccache statistics
+        if: steps.cached-llvm.outputs.cache-hit != 'true'
+        run: sccache --show-stats
+
+      - name: Upload LLVM build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: LlvmBuildOutputs
+          if-no-files-found: error
+          # This paths listed here must match "Load cached LLVM build outputs" above
+          path: build/bin/libclang.dll
+
+  build-dotnet:
+    name: Build ClangSharp.Pathogen
+    runs-on: ubuntu-latest
+    needs: build-llvm
+    outputs:
+      publish-to-github: ${{steps.configuration.outputs.publish-to-github}}
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: false
+    steps:
+      # ----------------------------------------------------------------------- Checkout
+      - name: Checkout
+        uses: actions/checkout@v2
+        # Sadly we need to check out submodules here to make SourceLink happy.
+        # (Ideally we'd just archive libclang.dll along with the handful of files ClangSharp.Pathogen.Runtime needs to build the NuGet package.)
+        with:
+          submodules: 'recursive'
+
+      # ----------------------------------------------------------------------- Setup Python
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      # ----------------------------------------------------------------------- Setup .NET
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+
+      # ----------------------------------------------------------------------- Download LLVM Build
+      - name: Download LLVM build artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: LlvmBuildOutputs
+          path: build/bin/
+      
+      # ----------------------------------------------------------------------- Configure versioning
+      - name: Configure build
+        id: configuration
+        run: python .github/workflows/configure-build.py
+        env:
+          github_event_name: ${{github.event_name}}
+          github_repository_owner: ${{github.repository_owner}}
+          github_run_number: ${{github.run_number}}
+          github_ref: ${{github.ref}}
+          is_official_source: ${{secrets.is_official_source}}
+          input_will_publish_packages: ${{github.event.inputs.will_publish_packages}}
+          input_preview_release_version: ${{github.event.inputs.preview_release_version}}
+          input_do_full_release: ${{github.event.inputs.do_full_release}}
+
+      # ----------------------------------------------------------------------- Build ClangSharp.Pathogen
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        id: build
+        run: dotnet build --no-restore
+
+      - name: Pack
+        id: pack
+        run: dotnet pack --no-build
+
+      # ----------------------------------------------------------------------- Collect Artifacts
+      - name: Collect Build Outputs
+        uses: actions/upload-artifact@v2
+        # We always want to collect build outputs when they were produced
+        if: steps.build.outcome == 'success' && always()
+        with:
+          name: BuildOutputs
+          path: |
+            **/bin/**
+            **/obj/**
+
+      - name: Collect NuGet Packages
+        uses: actions/upload-artifact@v2
+        # We always want to collect packages when they were produced
+        if: steps.pack.outcome == 'success' && always()
+        with:
+          name: Packages
+          path: packages/**
+  publish-packages:
+    name: Publish ClangSharp.Pathogen
+    runs-on: ubuntu-latest
+    needs: build-dotnet
+    if: needs.build-dotnet.outputs.publish-to-github == 'true'
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: false
+    steps:
+      # ----------------------------------------------------------------------- Checkout
+      # This is required to access to make-nuget-config.py
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # ----------------------------------------------------------------------- Setup Python
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      # ----------------------------------------------------------------------- Setup .NET
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+
+      # We use this script instead of the setup-dotnet settings so that this workflow is owner-agnostic and as such can run in forks.
+      # (We can't use github.repository_owner with source-url because it must be all lowercase.)
+      - name: Configure NuGet
+        run: python .github/workflows/make-nuget-config.py
+        env:
+          GITHUB_REPOSITORY_OWNER: ${{github.repository_owner}}
+          GITHUB_TOKEN: ${{github.token}}
+
+      # ----------------------------------------------------------------------- Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v2
+        with:
+          name: Packages
+
+      # ----------------------------------------------------------------------- Publish ClangSharp.Pathogen
+      - name: Push packages
+        run: dotnet nuget push *.nupkg --no-symbols=true --source=github
+        env:
+          # This is a workaround for https://github.com/NuGet/Home/issues/9775
+          DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0

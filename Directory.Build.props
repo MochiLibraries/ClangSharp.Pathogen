@@ -8,6 +8,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/InfectedLibraries</PackageProjectUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)packages/</PackageOutputPath>
     
     <!-- Ignore warnings about stable packages referencing pre-release ones. -->
     <NoWarn>$(NoWarn);NU5104</NoWarn>

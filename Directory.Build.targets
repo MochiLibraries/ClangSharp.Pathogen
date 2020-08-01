@@ -1,13 +1,4 @@
 <Project>
-  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
-    <!--
-      Put packages in dedicated folder
-      (This is in the .targets file so that $(Configuration) is always available.)
-    -->
-    <PackageOutputPath>$(MSBuildThisFileDirectory)packages/</PackageOutputPath>
-    <PackageOutputPath Condition="'$(Configuration)'!='Release'">$(PackageOutputPath)$(Configuration)/</PackageOutputPath>
-  </PropertyGroup>
-
   <!-- Import versioning logic -->
   <Import Condition="'$(MSBuildProjectExtension)' == '.csproj'" Project="tooling/Versioning.targets" />
 </Project>
