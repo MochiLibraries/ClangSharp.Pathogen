@@ -205,7 +205,7 @@ jobs:
 
       # ----------------------------------------------------------------------- Publish ClangSharp.Pathogen
       - name: Push packages
-        run: dotnet nuget push *.nupkg --no-symbols=true --source=github
+        run: dotnet nuget push "*.nupkg" --no-symbols=true --source=github
         env:
           # This is a workaround for https://github.com/NuGet/Home/issues/9775
           DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
