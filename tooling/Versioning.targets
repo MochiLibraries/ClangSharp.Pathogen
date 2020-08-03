@@ -36,7 +36,10 @@ See Versioning.props for details.
       <Version Condition="'$(ReleaseKind)' == 'FullRelease' and '$(ForkName)' != ''">$(Version).$(ForkName)</Version>
 
       <!-- Apply the updated version to NuGet -->
+      <!--
+        This is disabled until https://github.community/t/bug-nuget-support-build-metadata-properly/117606/3 is resolved
       <PackageVersion>$(Version)</PackageVersion>
+      -->
     </PropertyGroup>
   </Target>
 </Project>
