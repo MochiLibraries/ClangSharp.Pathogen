@@ -13,6 +13,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.targets = Directory.Build.targets
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tooling", "tooling", "{543C6D77-9322-4328-9A08-05F124A261CC}"
+	ProjectSection(SolutionItems) = preProject
+		tooling\Versioning.props = tooling\Versioning.props
+		tooling\Versioning.targets = tooling\Versioning.targets
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -30,6 +36,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{543C6D77-9322-4328-9A08-05F124A261CC} = {D91EF5C2-A8C3-450F-9369-2A6E1BA256C4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {47AC6DA4-5EC6-411A-B1CF-87D618F321DF}
