@@ -30,12 +30,6 @@ namespace ClangSharp.Pathogen
         public static ref PathogenOperatorOverloadInfo GetOperatorOverloadInfo(this FunctionDecl function)
             => ref function.Handle.GetOperatorOverloadInfo();
 
-        public static ulong GetEnumConstantValueZeroExtended(this CXCursor cursor)
-            => PathogenExtensions.pathogen_getEnumConstantDeclValueZeroExtended(cursor);
-
-        public static ulong GetConstantValueZeroExtended(this EnumConstantDecl enumConstant)
-            => enumConstant.Handle.GetEnumConstantValueZeroExtended();
-
         public static PathogenArgPassingKind GetRecordArgPassingRestrictions(this CXCursor cursor)
             => PathogenExtensions.pathogen_getArgPassingRestrictions(cursor);
 

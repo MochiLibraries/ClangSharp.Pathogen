@@ -63,9 +63,6 @@ namespace ClangSharp.Pathogen
         internal static extern unsafe PathogenOperatorOverloadInfo* pathogen_getOperatorOverloadInfo(CXCursor cursor);
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
-        internal static extern ulong pathogen_getEnumConstantDeclValueZeroExtended(CXCursor cursor);
-
-        [DllImport(LibraryFileName, ExactSpelling = true)]
         internal static extern PathogenArgPassingKind pathogen_getArgPassingRestrictions(CXCursor cursor);
     }
 }
