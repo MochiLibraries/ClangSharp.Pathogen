@@ -30,15 +30,19 @@ See Versioning.props for details.
       <LlvmVersionSuffix>LLVM-$(LlvmBaseVersion)</LlvmVersionSuffix>
       <LlvmVersionSuffix Condition="'$(IncludeLlvmSourceRevisionInVersion)' == 'true'">$(LlvmVersionSuffix).$(LlvmSourceRevision)</LlvmVersionSuffix>
 
-      <Version>$(Version)+$(SourceRevisionId).$(LlvmVersionSuffix)</Version>
+      <!--
+        Note that this _must_ be InformationalVersion.
+        Using Version here causes weird things including breaking fast up-to-date checks in Visual Studio.
+      -->
+      <InformationalVersion>$(Version)+$(SourceRevisionId).$(LlvmVersionSuffix)</InformationalVersion>
 
       <!-- Shove the fork name in the build metadata when it's present for full releases. -->
-      <Version Condition="'$(ReleaseKind)' == 'FullRelease' and '$(ForkName)' != ''">$(Version).$(ForkName)</Version>
+      <InformationalVersion Condition="'$(ReleaseKind)' == 'FullRelease' and '$(ForkName)' != ''">$(InformationalVersion).$(ForkName)</InformationalVersion>
 
       <!-- Apply the updated version to NuGet -->
       <!--
         This is disabled until https://github.community/t/bug-nuget-support-build-metadata-properly/117606/3 is resolved
-      <PackageVersion>$(Version)</PackageVersion>
+      <PackageVersion>$(InformationalVersion)</PackageVersion>
       -->
     </PropertyGroup>
   </Target>
