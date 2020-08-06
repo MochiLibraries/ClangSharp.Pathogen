@@ -1,6 +1,7 @@
 <!-- ==============================================================================================
 This file enforces consistent version conventions for ClangSharp.Pathogen packages.
 Specifically, it appends the build metadata (the parts after the +)
+It also handles persisting and resetting the DevelopmentVersionNumber.
 See Versioning.props for details.
 =============================================================================================== -->
 <Project>
@@ -45,5 +46,17 @@ See Versioning.props for details.
       <PackageVersion>$(InformationalVersion)</PackageVersion>
       -->
     </PropertyGroup>
+  </Target>
+
+  <!-- Handle persisting and resetting of DevelopmentVersionNumber -->
+  <Target Name="PersistDevelopmentVersionNumber" BeforeTargets="Build;Restore;Pack" Condition="'$(DevelopmentVersionNumberWasGenerated)' == 'true' and '$(ReleaseKind)' == 'Development'">
+    <WriteLinesToFile Lines="$(DevelopmentVersionNumber)" File="$(DevelopmentVersionCacheFilePath)" Overwrite="True" />
+    <ItemGroup>
+      <FileWrites Include="$(DevelopmentVersionCacheFilePath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ResetDevelopmentVersionNumber" AfterTargets="Pack;Clean" Condition="'$(ReleaseKind)' == 'Development' and Exists('$(DevelopmentVersionCacheFilePath)')">
+    <Delete Files="$(DevelopmentVersionCacheFilePath)" />
   </Target>
 </Project>

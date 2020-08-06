@@ -66,9 +66,33 @@ These versions may seem obnoxiously verbose, but the build metadata is usually s
     <VersionSuffix></VersionSuffix>
     <VersionSuffix Condition="'$(ReleaseKind)' == 'PreviewRelease'">$(PreviewReleaseVersion)$(_ForkNameWithDot)</VersionSuffix>
     <VersionSuffix Condition="'$(ReleaseKind)' == 'CiBuild'">ci$(ContinousIntegrationRunNumber)$(_ForkNameWithDot)</VersionSuffix>
-    
-    <_DevelopmentVersionNumber Condition="'$(ReleaseKind)' == 'Development'">$([MSBuild]::Divide($([System.DateTime]::UtcNow.Ticks), $([System.TimeSpan]::TicksPerSecond)).ToString(`X`))</_DevelopmentVersionNumber>
-    <VersionSuffix Condition="'$(ReleaseKind)' == 'Development'">dev$(_DevelopmentVersionNumber)$(_ForkNameWithDot)</VersionSuffix>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ReleaseKind)' == 'Development'">
+    <!--
+      Ideally we should use BaseIntermediateOutputPath here, but it isn't available at this point.
+      The extra slash is not a typo, MSBuildProjectDirectory breaks the convention of putting a trailing slash on directory properties.
+    -->
+    <DevelopmentVersionCacheFilePath>$(MSBuildProjectDirectory)/obj/DevelopmentVersionNumber</DevelopmentVersionCacheFilePath>
+
+    <!-- Load the development build version number from the cache -->
+    <DevelopmentVersionNumber Condition="Exists('$(DevelopmentVersionCacheFilePath)')">$([System.IO.File]::ReadAllText(`$(DevelopmentVersionCacheFilePath)`).Trim())</DevelopmentVersionNumber>
+
+    <!--
+      If there was no cache, generate a new version number
+      (DevelopmentVersionNumberWasGenerated causes the version number to be persisted by the PersistDevelopmentVersionNumber target)
+    -->
+    <DevelopmentVersionNumberWasGenerated Condition="'$(DevelopmentVersionNumber)' == ''">true</DevelopmentVersionNumberWasGenerated>
+    <DevelopmentVersionNumber Condition="'$(DevelopmentVersionNumber)' == ''">$([MSBuild]::Divide($([System.DateTime]::UtcNow.Ticks), $([System.TimeSpan]::TicksPerSecond)).ToString(`X`))</DevelopmentVersionNumber>
+
+    <!--
+      If this is a design-time build, remove the version number and don't try to cache it later.
+      Design-time builds don't appreciate the version number changing, and the design-time limitations can cause the PersistDevelopmentVersionNumber to be skipped.
+      In particular, this solves Visual Studio's package restore from looping over and over.
+    -->
+    <DevelopmentVersionNumber Condition="'$(DesignTimeBuild)' == 'true'"></DevelopmentVersionNumber>
+    <DevelopmentVersionNumberWasGenerated Condition="'$(DesignTimeBuild)' == 'true'"></DevelopmentVersionNumberWasGenerated>
+
+    <VersionSuffix>dev$(DevelopmentVersionNumber)$(_ForkNameWithDot)</VersionSuffix>
   </PropertyGroup>
 
   <!-- Import LLVM version file -->
