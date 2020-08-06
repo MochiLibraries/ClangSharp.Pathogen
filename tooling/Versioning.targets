@@ -27,14 +27,14 @@ See Versioning.props for details.
 
     <!-- Append the build metadata -->
     <PropertyGroup>
-      <LlvmVersionSuffix>LLVM-$(LlvmBaseVersion)</LlvmVersionSuffix>
-      <LlvmVersionSuffix Condition="'$(IncludeLlvmSourceRevisionInVersion)' == 'true'">$(LlvmVersionSuffix).$(LlvmSourceRevision)</LlvmVersionSuffix>
+      <_LlvmVersionSuffix>LLVM-$(LlvmBaseVersion)</_LlvmVersionSuffix>
+      <_LlvmVersionSuffix Condition="'$(IncludeLlvmSourceRevisionInVersion)' == 'true'">$(_LlvmVersionSuffix).$(LlvmSourceRevision)</_LlvmVersionSuffix>
 
       <!--
         Note that this _must_ be InformationalVersion.
         Using Version here causes weird things including breaking fast up-to-date checks in Visual Studio.
       -->
-      <InformationalVersion>$(Version)+$(SourceRevisionId).$(LlvmVersionSuffix)</InformationalVersion>
+      <InformationalVersion>$(Version)+$(SourceRevisionId).$(_LlvmVersionSuffix)</InformationalVersion>
 
       <!-- Shove the fork name in the build metadata when it's present for full releases. -->
       <InformationalVersion Condition="'$(ReleaseKind)' == 'FullRelease' and '$(ForkName)' != ''">$(InformationalVersion).$(ForkName)</InformationalVersion>
