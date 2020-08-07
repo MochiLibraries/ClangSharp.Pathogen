@@ -12,8 +12,14 @@ See Versioning.props for details.
     </PropertyGroup>
   </Target>
 
-  <!-- Validates version number logic and appends build metadata to the version number -->
-  <Target Name="ValidateAndAppendBuildMetadataToVersionNumber" BeforeTargets="GetAssemblyVersion;GenerateNuspec" DependsOnTargets="InitializeSourceControlInformation;DetermineLlvmSourceRevision">
+  <!--
+    Validates version number logic and appends build metadata to the version number
+    We skip this during design-time builds because A) it's unecessary and B) Git information won't be available from SourceLink.
+  -->
+  <Target Name="ValidateAndAppendBuildMetadataToVersionNumber"
+          BeforeTargets="GetAssemblyVersion;GenerateNuspec"
+          DependsOnTargets="InitializeSourceControlInformation;DetermineLlvmSourceRevision"
+          Condition="'$(DesignTimeBuild)' != 'true'">
     <!-- Source control information must be supported -->
     <Error Text="Source control information must be available." Condition="'$(SourceControlInformationFeatureSupported)' != 'true'" />
 
@@ -31,10 +37,6 @@ See Versioning.props for details.
       <_LlvmVersionSuffix>LLVM-$(LlvmBaseVersion)</_LlvmVersionSuffix>
       <_LlvmVersionSuffix Condition="'$(IncludeLlvmSourceRevisionInVersion)' == 'true'">$(_LlvmVersionSuffix).$(LlvmSourceRevision)</_LlvmVersionSuffix>
 
-      <!--
-        Note that this _must_ be InformationalVersion.
-        Using Version here causes weird things including breaking fast up-to-date checks in Visual Studio.
-      -->
       <InformationalVersion>$(Version)+$(SourceRevisionId).$(_LlvmVersionSuffix)</InformationalVersion>
 
       <!-- Shove the fork name in the build metadata when it's present for full releases. -->
