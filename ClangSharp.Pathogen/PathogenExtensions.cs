@@ -75,7 +75,7 @@ namespace ClangSharp.Pathogen
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
-        public static extern unsafe bool pathogen_ComputeConstantValue(CXCursor cursor, PathogenConstantValueInfo* info, char** error);
+        public static extern unsafe bool pathogen_ComputeConstantValue(CXCursor cursor, PathogenConstantValueInfo* info, byte** error);
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
         public static extern unsafe void pathogen_DeletePathogenConstantValueInfo(PathogenConstantValueInfo* info);
