@@ -16,6 +16,8 @@ namespace ClangSharp.Pathogen
             public int PathogenVTable;
             public int PathogenVTableEntry;
             public int PathogenOperatorOverloadInfo;
+            public int PathogenConstantString;
+            public int PathogenConstantValueInfo;
         }
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
@@ -47,6 +49,12 @@ namespace ClangSharp.Pathogen
 
             if (sizes.PathogenOperatorOverloadInfo != sizeof(PathogenOperatorOverloadInfo))
             { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenOperatorOverloadInfo)} is wrong."); }
+
+            if (sizes.PathogenConstantString != sizeof(PathogenConstantString))
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenConstantString)} is wrong."); }
+
+            if (sizes.PathogenConstantValueInfo != sizeof(PathogenConstantValueInfo))
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenConstantValueInfo)} is wrong."); }
         }
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
@@ -64,5 +72,12 @@ namespace ClangSharp.Pathogen
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
         internal static extern PathogenArgPassingKind pathogen_getArgPassingRestrictions(CXCursor cursor);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern unsafe bool pathogen_ComputeConstantValue(CXCursor cursor, PathogenConstantValueInfo* info, char** error);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern unsafe void pathogen_DeletePathogenConstantValueInfo(PathogenConstantValueInfo* info);
     }
 }
