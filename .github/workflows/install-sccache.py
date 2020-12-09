@@ -7,6 +7,8 @@ import sys
 import tarfile
 import urllib.request
 
+import gha
+
 # Configuration
 url_base = "https://github.com/mozilla/sccache/releases/download/0.2.12/"
 
@@ -40,9 +42,9 @@ sccache_binary_location = os.path.join(sccache_directory, binary_name)
 os.makedirs(sccache_directory, exist_ok=True)
 
 # Add sccache to the workspace path and configure sccache's cache directory
-print(f"::set-output name=root-directory::{sccache_root}")
-print(f"::set-env name=SCCACHE_DIR::{sccache_cache_directory}")
-print(f"::add-path::{sccache_directory}")
+gha.set_output('root-directory', sccache_root)
+gha.set_environment_variable('SCCACHE_DIR', sccache_cache_directory)
+gha.add_path(sccache_directory)
 
 # If the output path already exists, no need to download
 # (This will happen automagically because the binary is going to be cached along with the cache its self.)

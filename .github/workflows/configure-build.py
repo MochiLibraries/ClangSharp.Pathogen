@@ -4,31 +4,7 @@ import os
 import re
 import sys
 
-#==================================================================================================
-# Utility Functions
-#==================================================================================================
-errors_were_printed = False
-
-def fail_if_errors():
-    if errors_were_printed:
-        print("Exiting due to previous errors.", file=sys.stderr)
-        sys.exit(1)
-
-def print_error(message):
-    global errors_were_printed
-    errors_were_printed = True
-    print(f"::error::{message}", file=sys.stderr)
-
-def print_warning(message):
-    print(f"::warning::{message}", file=sys.stderr)
-
-def set_environment_variable(name, value):
-    print(f"::set-env name={name}::{value}")
-
-def set_output(name, value):
-    if isinstance(value, bool):
-        value = "true" if value else "false"
-    print(f"::set-output name={name}::{value}")
+import gha
 
 #==================================================================================================
 # Get inputs
@@ -37,7 +13,7 @@ def get_environment_variable(name):
     ret = os.getenv(name)
 
     if ret is None:
-        print_error(f"Missing required parameter '{name}'")
+        gha.print_error(f"Missing required parameter '{name}'")
     
     if (ret == ''):
         return None
@@ -75,45 +51,45 @@ elif github_event_name == 'workflow_dispatch':
     is_full_release = get_environment_variable('input_do_full_release') == 'true'
 
     if is_preview_release and re.match('^[0-9a-zA-Z.-]+$', preview_release_version) is None:
-        print_error(f"'{preview_release_version}' is not a valid preview release identifier.")
+        gha.print_error(f"'{preview_release_version}' is not a valid preview release identifier.")
     
     if is_full_release and is_preview_release:
-        print_error(f"A release cannot be both a full release and a preview release.")
+        gha.print_error(f"A release cannot be both a full release and a preview release.")
     
     if is_full_release and not is_official_source:
-        print_warning("Full release should probably not be created by third parties.")
+        gha.print_warning("Full release should probably not be created by third parties.")
 else:
-    print_warning(f"Unexpected GitHub event '{github_event_name}'")
+    gha.print_warning(f"Unexpected GitHub event '{github_event_name}'")
 
 # If there are any errors at this point, make sure we exit with an error code
-fail_if_errors()
+gha.fail_if_errors()
 
 #==================================================================================================
 # Emit MSBuild Properties
 #==================================================================================================
-set_environment_variable('ContinuousIntegrationBuild', 'true')
+gha.set_environment_variable('ContinuousIntegrationBuild', 'true')
 
 if is_preview_release:
-    set_environment_variable('Configuration', 'Release')
-    set_environment_variable('ContinuousIntegrationBuildKind', 'PreviewRelease')
-    set_environment_variable('PreviewReleaseVersion', preview_release_version)
+    gha.set_environment_variable('Configuration', 'Release')
+    gha.set_environment_variable('ContinuousIntegrationBuildKind', 'PreviewRelease')
+    gha.set_environment_variable('PreviewReleaseVersion', preview_release_version)
 elif is_full_release:
-    set_environment_variable('Configuration', 'Release')
-    set_environment_variable('ContinuousIntegrationBuildKind', 'FullRelease')
+    gha.set_environment_variable('Configuration', 'Release')
+    gha.set_environment_variable('ContinuousIntegrationBuildKind', 'FullRelease')
 else:
-    set_environment_variable('Configuration', 'Debug')
-    set_environment_variable('ContinousIntegrationRunNumber', github_run_number)
+    gha.set_environment_variable('Configuration', 'Debug')
+    gha.set_environment_variable('ContinousIntegrationRunNumber', github_run_number)
 
 # If this build is happening outside of InfectedLibraries, add a fork name
 if not is_official_source:
-    set_environment_variable('ForkName', github_repository_owner)
+    gha.set_environment_variable('ForkName', github_repository_owner)
 
 #==================================================================================================
 # Emit step outputs
 #==================================================================================================
-set_output('publish-to-github', will_publish_packages)
+gha.set_output('publish-to-github', will_publish_packages)
 
 #==================================================================================================
 # Final check to exit with an error code if any errors were printed
 #==================================================================================================
-fail_if_errors()
+gha.fail_if_errors()
