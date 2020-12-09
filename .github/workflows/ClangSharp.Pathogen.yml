@@ -68,6 +68,10 @@ jobs:
           key: sccache-cache-${{runner.os}}-${{steps.llvm.outputs.revision}}
           restore-keys: sccache-cache-${{runner.os}}-
 
+      - name: Start sccache server
+        if: steps.cached-llvm.outputs.cache-hit != 'true'
+        run: sccache --start-server
+
       - name: Build LLVM
         if: steps.cached-llvm.outputs.cache-hit != 'true'
         run: ./build-native.cmd
