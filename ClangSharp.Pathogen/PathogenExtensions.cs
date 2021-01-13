@@ -18,6 +18,7 @@ namespace ClangSharp.Pathogen
             public int PathogenOperatorOverloadInfo;
             public int PathogenConstantString;
             public int PathogenConstantValueInfo;
+            public int PathogenMacroInformation;
         }
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
@@ -55,6 +56,9 @@ namespace ClangSharp.Pathogen
 
             if (sizes.PathogenConstantValueInfo != sizeof(PathogenConstantValueInfo))
             { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenConstantValueInfo)} is wrong."); }
+
+            if (sizes.PathogenMacroInformation != sizeof(PathogenMacroInformation))
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenMacroInformation)} is wrong."); }
         }
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
@@ -79,5 +83,11 @@ namespace ClangSharp.Pathogen
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
         public static extern unsafe void pathogen_DeletePathogenConstantValueInfo(PathogenConstantValueInfo* info);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern uint pathogen_GetPreprocessorIdentifierCount(CXTranslationUnit translationUnit);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern unsafe void pathogen_EnumerateMacros(CXTranslationUnit translationUnit, delegate* unmanaged[Cdecl]<PathogenMacroInformation*, void*, void> enumerator, void* userData);
     }
 }
