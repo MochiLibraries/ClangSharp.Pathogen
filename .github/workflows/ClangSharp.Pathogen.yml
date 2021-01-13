@@ -1,6 +1,7 @@
 name: ClangSharp.Pathogen
 on:
   push:
+    branches: ['*']
   pull_request:
   workflow_dispatch:
     inputs:
@@ -177,9 +178,6 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.x
-          source-url: https://nuget.pkg.github.com/${{github.repository_owner}}/index.json
-        env:
-          NUGET_AUTH_TOKEN: ${{github.token}}
 
       # ----------------------------------------------------------------------- Download built packages
       - name: Download built packages
@@ -189,7 +187,34 @@ jobs:
 
       # ----------------------------------------------------------------------- Publish ClangSharp.Pathogen
       - name: Push packages
-        run: dotnet nuget push "*.nupkg" --no-symbols=true
+        run: dotnet nuget push "*.nupkg" --no-symbols true --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/${{github.repository_owner}}
         env:
           # This is a workaround for https://github.com/NuGet/Home/issues/9775
           DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
+
+  send-ci-failure-notification:
+    name: Send CI Failure Notification
+    needs: [build-llvm, build-dotnet, publish-packages]
+    if: failure() && github.event_name != 'pull_request'
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      # ----------------------------------------------------------------------- Checkout
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # ----------------------------------------------------------------------- Setup Python
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      
+      # ----------------------------------------------------------------------- Send CI Failure Notification
+      - name: Send Notification
+        run: python .github/workflows/send-ci-failure-notification.py
+        env:
+          webhook_url: ${{secrets.TEAMS_WEBHOOK_URL}}
+          github_organization: ${{github.repository_owner}}
+          github_repo: ${{github.repository}}
+          github_workflow_name: ${{github.workflow}}
+          github_run_number: ${{github.run_id}}
