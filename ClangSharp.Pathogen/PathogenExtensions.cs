@@ -89,5 +89,8 @@ namespace ClangSharp.Pathogen
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
         public static extern unsafe void pathogen_EnumerateMacros(CXTranslationUnit translationUnit, delegate* unmanaged[Cdecl]<PathogenMacroInformation*, void*, void> enumerator, void* userData);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern CXString pathogen_GetUuidAttrGuid(CXCursor cursor);
     }
 }
