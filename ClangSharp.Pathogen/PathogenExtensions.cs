@@ -23,7 +23,6 @@ namespace ClangSharp.Pathogen
         }
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
-        [return: MarshalAs(UnmanagedType.U1)]
         private static extern byte pathogen_GetTypeSizes(ref PathogenTypeSizes sizes);
 
         unsafe static PathogenExtensions()
@@ -35,34 +34,34 @@ namespace ClangSharp.Pathogen
             };
 
             if (pathogen_GetTypeSizes(ref sizes) == 0)
-            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenTypeSizes)} is wrong."); }
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenTypeSizes)}) is wrong."); }
 
             if (sizes.PathogenRecordLayout != sizeof(PathogenRecordLayout))
-            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenRecordLayout)} is wrong."); }
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenRecordLayout)}) is wrong."); }
 
             if (sizes.PathogenRecordField != sizeof(PathogenRecordField))
-            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenRecordField)} is wrong."); }
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenRecordField)}) is wrong."); }
 
             if (sizes.PathogenVTable != sizeof(PathogenVTable))
-            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenVTable)} is wrong."); }
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenVTable)}) is wrong."); }
 
             if (sizes.PathogenVTableEntry != sizeof(PathogenVTableEntry))
-            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenVTableEntry)} is wrong."); }
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenVTableEntry)}) is wrong."); }
 
             if (sizes.PathogenOperatorOverloadInfo != sizeof(PathogenOperatorOverloadInfo))
-            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenOperatorOverloadInfo)} is wrong."); }
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenOperatorOverloadInfo)}) is wrong."); }
 
             if (sizes.PathogenConstantString != sizeof(PathogenConstantString))
-            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenConstantString)} is wrong."); }
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenConstantString)}) is wrong."); }
 
             if (sizes.PathogenConstantValueInfo != sizeof(PathogenConstantValueInfo))
-            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenConstantValueInfo)} is wrong."); }
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenConstantValueInfo)}) is wrong."); }
 
             if (sizes.PathogenMacroInformation != sizeof(PathogenMacroInformation))
-            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenMacroInformation)} is wrong."); }
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenMacroInformation)}) is wrong."); }
 
             if (sizes.PathogenTemplateInstantiationMetrics != sizeof(PathogenTemplateInstantiationMetrics))
-            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenTemplateInstantiationMetrics)} is wrong."); }
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenTemplateInstantiationMetrics)}) is wrong."); }
         }
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
@@ -101,6 +100,7 @@ namespace ClangSharp.Pathogen
         public static extern PathogenTemplateSpecializationKind pathogen_GetSpecializationKind(CXCursor cursor);
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool pathogen_InstantiateSpecializedClassTemplate(CXCursor cursor);
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
