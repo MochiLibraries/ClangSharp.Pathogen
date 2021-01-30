@@ -82,5 +82,8 @@ namespace ClangSharp.Pathogen
             clang.getFileLocation(sourceLocation, (void**)&ret, null, null, null);
             return ret;
         }
+
+        public static PathogenTemplateSpecializationKind GetSpecializationKind(this ClassTemplateSpecializationDecl classTemplateSpecialization)
+            => PathogenExtensions.pathogen_GetSpecializationKind(classTemplateSpecialization.Handle);
     }
 }

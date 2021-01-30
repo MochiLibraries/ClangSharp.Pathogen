@@ -19,6 +19,7 @@ namespace ClangSharp.Pathogen
             public int PathogenConstantString;
             public int PathogenConstantValueInfo;
             public int PathogenMacroInformation;
+            public int PathogenTemplateInstantiationMetrics;
         }
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
@@ -59,6 +60,9 @@ namespace ClangSharp.Pathogen
 
             if (sizes.PathogenMacroInformation != sizeof(PathogenMacroInformation))
             { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenMacroInformation)} is wrong."); }
+
+            if (sizes.PathogenTemplateInstantiationMetrics != sizeof(PathogenTemplateInstantiationMetrics))
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenTemplateInstantiationMetrics)} is wrong."); }
         }
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
@@ -92,5 +96,22 @@ namespace ClangSharp.Pathogen
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
         public static extern CXString pathogen_GetUuidAttrGuid(CXCursor cursor);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern PathogenTemplateSpecializationKind pathogen_GetSpecializationKind(CXCursor cursor);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern bool pathogen_InstantiateSpecializedClassTemplate(CXCursor cursor);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern PathogenTemplateInstantiationMetrics pathogen_InstantiateAllFullySpecializedClassTemplates(CXTranslationUnit translationUnit);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern unsafe void pathogen_EnumerateAllSpecializedClassTemplates
+        (
+            CXTranslationUnit translationUnit,
+            delegate* unmanaged[Cdecl]<PathogenTemplateSpecializationKind, CXCursor, void*, void> enumerator,
+            void* userData
+        );
     }
 }
