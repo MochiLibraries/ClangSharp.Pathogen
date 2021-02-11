@@ -22,14 +22,14 @@ Building is currently only supported on Windows x64 with Visual Studio 2019.
 
 Tool | Recommended Version
 -----|--------------------
-[CMake](https://cmake.org/) | 3.17.2
+[CMake](https://cmake.org/) | 3.18.4
 [Ninja](https://ninja-build.org/) | 1.10.0
-[Visual Studio 2019](https://visualstudio.microsoft.com/vs/) | 16.6.4
-[.NET Core SDK](http://dot.net/) | 3.1.302
+[Visual Studio 2019](https://visualstudio.microsoft.com/vs/) | 16.8.5
+[.NET Core SDK](http://dot.net/) | 5.0
 
 Visual Studio requires the "Desktop development with C++" and  ".NET desktop development" workloads to be installed.
 
-If [sccache](https://github.com/mozilla/sccache) (0.2.12 recommended) is present on your path it will automatically be used to acellerate subsequent builds.
+If [sccache](https://github.com/mozilla/sccache) (0.2.15 recommended) is present on your path it will automatically be used to acellerate subsequent builds.
 
 ### Build Steps
 
