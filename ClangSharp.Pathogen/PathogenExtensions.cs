@@ -6,7 +6,7 @@ namespace ClangSharp.Pathogen
 {
     public class PathogenExtensions
     {
-        private const string LibraryFileName = "libclang-pathogen.dll";
+        internal const string LibraryFileName = "libclang-pathogen";
 
         private struct PathogenTypeSizes
         {
