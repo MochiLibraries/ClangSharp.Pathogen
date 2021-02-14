@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Initialize cmake (if necessary)
-if [[ ! -f "build-linux/build2.ninja" ]]; then
+if [[ ! -f "build-linux/build.ninja" ]]; then
     CMAKE_EXTRA_ARGUMENTS=""
 
     # If sccache is installed, use it
