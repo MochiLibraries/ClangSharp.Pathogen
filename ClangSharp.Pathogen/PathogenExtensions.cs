@@ -113,5 +113,8 @@ namespace ClangSharp.Pathogen
             delegate* unmanaged[Cdecl]<PathogenTemplateSpecializationKind, CXCursor, void*, void> enumerator,
             void* userData
         );
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern unsafe CXString pathogen_getTypeSpellingWithPlaceholder(CXType type, byte* placeholder, nint placeholderByteCount);
     }
 }

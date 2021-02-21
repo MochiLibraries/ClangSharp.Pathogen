@@ -1,6 +1,7 @@
 ﻿using ClangSharp.Interop;
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ClangSharp.Pathogen
 {
@@ -85,5 +86,18 @@ namespace ClangSharp.Pathogen
 
         public static PathogenTemplateSpecializationKind GetSpecializationKind(this ClassTemplateSpecializationDecl classTemplateSpecialization)
             => PathogenExtensions.pathogen_GetSpecializationKind(classTemplateSpecialization.Handle);
+
+        public static unsafe string GetSpellingWithPlaceholder(this CXType type, string placeholder)
+        {
+            byte[] placeholderBytes = Encoding.UTF8.GetBytes(placeholder);
+            fixed (byte* placeholderBytesP = placeholderBytes)
+            {
+                using CXString result = PathogenExtensions.pathogen_getTypeSpellingWithPlaceholder(type, placeholderBytesP, placeholderBytes.Length);
+                return result.ToString();
+            }
+        }
+
+        public static string GetSpellingWithPlaceholder(this Type type, string placeholder)
+            => GetSpellingWithPlaceholder(type.Handle, placeholder);
     }
 }
