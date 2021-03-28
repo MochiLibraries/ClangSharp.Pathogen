@@ -116,5 +116,11 @@ namespace ClangSharp.Pathogen
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
         public static extern unsafe CXString pathogen_getTypeSpellingWithPlaceholder(CXType type, byte* placeholder, nint placeholderByteCount);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern CXCursor pathogen_BeginEnumerateDeclarationsRaw(CXCursor cursor);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public static extern CXCursor pathogen_EnumerateDeclarationsRawMoveNext(CXCursor cursor);
     }
 }
