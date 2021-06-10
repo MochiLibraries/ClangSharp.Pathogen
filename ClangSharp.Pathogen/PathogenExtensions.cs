@@ -20,6 +20,9 @@ namespace ClangSharp.Pathogen
             public int PathogenConstantValueInfo;
             public int PathogenMacroInformation;
             public int PathogenTemplateInstantiationMetrics;
+            public int PathogenCodeGenerator;
+            public int PathogenArgumentInfo;
+            public int PathogenArrangedFunction;
         }
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
@@ -62,6 +65,15 @@ namespace ClangSharp.Pathogen
 
             if (sizes.PathogenTemplateInstantiationMetrics != sizeof(PathogenTemplateInstantiationMetrics))
             { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenTemplateInstantiationMetrics)}) is wrong."); }
+
+            if (sizes.PathogenCodeGenerator != sizeof(PathogenCodeGenerator.RawCodeGenerator))
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenCodeGenerator)}) is wrong."); }
+
+            if (sizes.PathogenArgumentInfo != sizeof(PathogenArgumentInfo))
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenArgumentInfo)}) is wrong."); }
+
+            if (sizes.PathogenArrangedFunction != sizeof(PathogenArrangedFunction.RawArrangedFunction))
+            { throw new InvalidOperationException($"Cannot initialize Pathogen libclang extensions, sizeof({nameof(PathogenArrangedFunction)}) is wrong."); }
         }
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
@@ -122,5 +134,17 @@ namespace ClangSharp.Pathogen
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
         public static extern CXCursor pathogen_EnumerateDeclarationsRawMoveNext(CXCursor cursor);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        internal static extern void pathogen_CreateCodeGenerator(CXTranslationUnit translationUnit, out PathogenCodeGenerator.RawCodeGenerator codeGenerator);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        internal static extern void pathogen_DisposeCodeGenerator(ref PathogenCodeGenerator.RawCodeGenerator codeGenerator);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        internal unsafe static extern PathogenArrangedFunction.RawArrangedFunction* pathogen_GetArrangedFunction(in PathogenCodeGenerator.RawCodeGenerator codeGenerator, CXCursor cursor);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        internal unsafe static extern void pathogen_DisposeArrangedFunction(PathogenArrangedFunction.RawArrangedFunction* function);
     }
 }
