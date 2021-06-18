@@ -38,6 +38,13 @@ namespace ClangSharp.Pathogen
             : this(codeGenerator, functionDecl.Handle)
         { }
 
+        public PathogenArrangedFunction(PathogenCodeGenerator codeGenerator, CXType type)
+            => Handle = PathogenExtensions.pathogen_GetArrangedFunctionPointer(codeGenerator.Handle, type);
+
+        public PathogenArrangedFunction(PathogenCodeGenerator codeGenerator, FunctionProtoType type)
+            : this(codeGenerator, type.Handle)
+        { }
+
         public readonly ref struct ArgumentAccessor
         {
             private readonly PathogenArgumentInfo* FirstArgument;

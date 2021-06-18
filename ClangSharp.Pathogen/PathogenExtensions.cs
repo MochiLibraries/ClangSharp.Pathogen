@@ -145,6 +145,9 @@ namespace ClangSharp.Pathogen
         internal unsafe static extern PathogenArrangedFunction.RawArrangedFunction* pathogen_GetArrangedFunction(in PathogenCodeGenerator.RawCodeGenerator codeGenerator, CXCursor cursor);
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
+        internal unsafe static extern PathogenArrangedFunction.RawArrangedFunction* pathogen_GetArrangedFunctionPointer(in PathogenCodeGenerator.RawCodeGenerator codeGenerator, CXType type);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
         internal unsafe static extern void pathogen_DisposeArrangedFunction(PathogenArrangedFunction.RawArrangedFunction* function);
     }
 }
