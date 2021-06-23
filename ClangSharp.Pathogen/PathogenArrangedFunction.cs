@@ -32,7 +32,12 @@ namespace ClangSharp.Pathogen
         public ArgumentAccessor Arguments => new(Handle, checked((int)ArgumentCount));
 
         public PathogenArrangedFunction(PathogenCodeGenerator codeGenerator, CXCursor cursor)
-            => Handle = PathogenExtensions.pathogen_GetArrangedFunction(codeGenerator.Handle, cursor);
+        {
+            Handle = PathogenExtensions.pathogen_GetArrangedFunction(codeGenerator.Handle, cursor);
+
+            if (Handle is null)
+            { throw new InvalidOperationException("Failed to arrange the function call. Use a debug build of libclang-pathogen for details."); }
+        }
 
         public PathogenArrangedFunction(PathogenCodeGenerator codeGenerator, FunctionDecl functionDecl)
             : this(codeGenerator, functionDecl.Handle)
