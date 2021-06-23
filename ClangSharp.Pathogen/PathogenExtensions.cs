@@ -149,5 +149,11 @@ namespace ClangSharp.Pathogen
 
         [DllImport(LibraryFileName, ExactSpelling = true)]
         internal unsafe static extern void pathogen_DisposeArrangedFunction(PathogenArrangedFunction.RawArrangedFunction* function);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public unsafe static extern CXStringSet* pathogen_IsFunctionCallable(CXCursor cursor);
+
+        [DllImport(LibraryFileName, ExactSpelling = true)]
+        public unsafe static extern CXStringSet* pathogen_IsFunctionTypeCallable(CXType type);
     }
 }

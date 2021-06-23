@@ -1,5 +1,6 @@
 ﻿using ClangSharp.Interop;
 using System;
+using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -99,5 +100,33 @@ namespace ClangSharp.Pathogen
 
         public static string GetSpellingWithPlaceholder(this Type type, string placeholder)
             => GetSpellingWithPlaceholder(type.Handle, placeholder);
+
+        private unsafe static bool IsCallableImplementation(CXStringSet* diagnosticsSet, out ImmutableArray<string> diagnostics)
+        {
+            if (diagnosticsSet == null)
+            {
+                diagnostics = ImmutableArray<string>.Empty;
+                return true;
+            }
+
+            try
+            {
+                ImmutableArray<string>.Builder diagnosticsBuilder = ImmutableArray.CreateBuilder<string>((int)diagnosticsSet->Count);
+                
+                for (uint i = 0; i < diagnosticsSet->Count; i++)
+                { diagnosticsBuilder.Add(diagnosticsSet->Strings[i].ToString()); }
+
+                diagnostics = diagnosticsBuilder.MoveToImmutable();
+                return false;
+            }
+            finally
+            { diagnosticsSet->Dispose(); }
+        }
+
+        public unsafe static bool IsCallable(this FunctionDecl function, out ImmutableArray<string> diagnostics)
+            => IsCallableImplementation(PathogenExtensions.pathogen_IsFunctionCallable(function.Handle), out diagnostics);
+
+        public unsafe static bool IsComplete(this FunctionProtoType functionType, out ImmutableArray<string> diagnostics)
+            => IsCallableImplementation(PathogenExtensions.pathogen_IsFunctionTypeCallable(functionType.Handle), out diagnostics);
     }
 }
