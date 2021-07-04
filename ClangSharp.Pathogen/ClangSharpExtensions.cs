@@ -126,7 +126,7 @@ namespace ClangSharp.Pathogen
         public unsafe static bool IsCallable(this FunctionDecl function, out ImmutableArray<string> diagnostics)
             => IsCallableImplementation(PathogenExtensions.pathogen_IsFunctionCallable(function.Handle), out diagnostics);
 
-        public unsafe static bool IsComplete(this FunctionProtoType functionType, out ImmutableArray<string> diagnostics)
+        public unsafe static bool IsCallable(this FunctionProtoType functionType, out ImmutableArray<string> diagnostics)
             => IsCallableImplementation(PathogenExtensions.pathogen_IsFunctionTypeCallable(functionType.Handle), out diagnostics);
     }
 }
