@@ -90,10 +90,11 @@ namespace ClangSharp.Pathogen
                     goto case PathogenExtensions.LibraryFileName;
                 case PathogenExtensions.LibraryFileName:
                 {
-                    // If we don't have a handle already, load libclang-pathogen using the OS resolver
+                    // If we don't have a handle already, load libclang-pathogen using the runtime's default resolver
+                    // (We do not want to use NativeLibrary.Load(string) since it does not search for platform-specific native runtimes.)
                     if (NativeRuntimeHandle == IntPtr.Zero)
                     {
-                        IntPtr handle = NativeLibrary.Load(PathogenExtensions.LibraryFileName);
+                        IntPtr handle = NativeLibrary.Load(PathogenExtensions.LibraryFileName, typeof(LibClangSharpResolver).Assembly, searchPath);
                         Interlocked.CompareExchange(ref NativeRuntimeHandle, handle, IntPtr.Zero);
                     }
 
