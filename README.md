@@ -6,7 +6,7 @@
 
 This repo contains C# bindings for the [libclang Pathogen Extensions](https://github.com/InfectedLibraries/llvm-project) as well as other utilities used by Biohazrd for interacting with ClangSharp.
 
-Currently this project targets libclang 10.0.0 and ClangSharp 10.0.0-beta. Currently the NuGet package only supports Windows x64, but the native components can be manually built for Linux x64.
+Currently this project targets libclang 10.0.0 and ClangSharp 10.0.0-beta. The NuGet package is currently built for Windows x64 and Linux x64 (glibc >= 2.27).
 
 ## License
 
@@ -39,7 +39,7 @@ If [sccache](https://github.com/mozilla/sccache) (0.2.15 recommended) is present
 
 ## Building - Linux
 
-Ubuntu 20.04 Focal x64 is recommended.
+Ubuntu 20.04 Focal x64 is recommended for development, Ubuntu 18.04 Bionic x64 is used for CI builds.
 
 ### Prerequisites
 
@@ -57,8 +57,8 @@ If [sccache](https://github.com/mozilla/sccache) (0.2.15 recommended, download t
 
 1. Ensure Git submodules are up-to-date with `git submodule update --init --recursive`
 2. Run `build-native.sh` (This will take quite a while the first time.)
-
-You can build and pack the managed components using the .NET SDK (IE: `dotnet build`), however the `ClangSharp.Pathogen.Runtime` project will fail due to the fact that it currently expects the Windows native runtime to be present. (Linux NuGet packages are sitll a work in progress.)
+3. Build the managed components using `dotnet build`
+4. If desired, pack the NuGet packages using `dotnet pack`
 
 ## Development
 

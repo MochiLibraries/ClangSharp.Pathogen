@@ -6,7 +6,8 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     
     <!-- Paths to LLVM things -->
-    <LibClangPathogenPath>$(MSBuildThisFileDirectory)../build/bin/libclang.dll</LibClangPathogenPath>
+    <LibClangPathogenPathWindows>$(MSBuildThisFileDirectory)../build/bin/libclang.dll</LibClangPathogenPathWindows>
+    <LibClangPathogenPathLinux>$(MSBuildThisFileDirectory)../build-linux/lib/libclang.so</LibClangPathogenPathLinux>
     <PathogenExtensionsCppPath>$(MSBuildThisFileDirectory)../external/llvm-project/clang/tools/libclang/PathogenExtensions.cpp</PathogenExtensionsCppPath>
     <LicenseFilePath>$(MSBuildThisFileDirectory)../external/llvm-project/clang/LICENSE.TXT</LicenseFilePath>
     
@@ -33,17 +34,36 @@
     <None Condition="Exists('$(PathogenExtensionsCppPath)')" Include="$(PathogenExtensionsCppPath)" Link="PathogenExtensions.cpp" />
     <None Condition="Exists('$(LicenseFilePath)')" Include="$(LicenseFilePath)" Link="LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
   </ItemGroup>
-  <ItemGroup Condition="Exists('$(LibClangPathogenPath)')">
-    <None Include="$(LibClangPathogenPath)" Link="libclang-pathogen.dll">
+  <ItemGroup>
+    <None Include="$(LibClangPathogenPathWindows)" Link="libclang-pathogen.dll" Condition="Exists('$(LibClangPathogenPathWindows)')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Pack>true</Pack>
       <PackagePath>runtimes/win-x64/native/libclang-pathogen.dll</PackagePath>
+    </None>
+    <None Include="$(LibClangPathogenPathLinux)" Link="libclang-pathogen.so" Condition="Exists('$(LibClangPathogenPathLinux)')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>true</Pack>
+      <PackagePath>runtimes/linux-x64/native/libclang-pathogen.so</PackagePath>
     </None>
   </ItemGroup>
   <!-- Error if native runtime needs to be built or llvm-project is missing -->
   <Target Name="_NativeRuntimeChecks" BeforeTargets="Build;Pack">
     <Error Text="PathogenExtensions.cpp is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(PathogenExtensionsCppPath)')" />
     <Error Text="Clang LICENSE.TXT is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(LicenseFilePath)')" />
-    <Error Text="Custom libclang.dll is missing, run `build-native.cmd` in the solution root to build it." Condition="!Exists('$(LibClangPathogenPath)')" />
+
+    <PropertyGroup>
+      <_AllRuntimesPresent>true</_AllRuntimesPresent>
+      <_AnyRuntimePresent>false</_AnyRuntimePresent>
+      <!-- Check Windows runtime -->
+      <_AllRuntimesPresent Condition="!Exists('$(LibClangPathogenPathWindows)')">false</_AllRuntimesPresent>
+      <_AnyRuntimePresent Condition="Exists('$(LibClangPathogenPathWindows)')">true</_AnyRuntimePresent>
+      <!-- Check Linux runtime -->
+      <_AllRuntimesPresent Condition="!Exists('$(LibClangPathogenPathLinux)')">false</_AllRuntimesPresent>
+      <_AnyRuntimePresent Condition="Exists('$(LibClangPathogenPathLinux)')">true</_AnyRuntimePresent>
+    </PropertyGroup>
+    <!-- CI builds must have all runtimes present -->
+    <Error Text="One or more native runtimes are missing, all runtimes are required for CI builds." Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(_AllRuntimesPresent)' != 'true'" />
+    <!-- For non-CI builds, at least one runtime must be present -->
+    <Error Text="No native runtimes found, at least one native runtime must be built using `build-native.cmd` or `build-native.sh`." Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(_AnyRuntimePresent)' != 'true'" />
   </Target>
 </Project>

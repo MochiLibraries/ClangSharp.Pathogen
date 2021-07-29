@@ -20,8 +20,24 @@ env:
   DOTNET_GENERATE_ASPNET_CERTIFICATE: false
 jobs:
   build-llvm:
-    name: Build LLVM
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows
+            lib-path: build/bin/libclang.dll
+            build-command: ./build-native.cmd
+            artifact-name: LlvmBuildOutputs-Windows
+          # We use Ubuntu 18.04 so that the binary is usable on systems using glibc 2.27 and later
+          # If we want to support even older versions we should explore building libclang with https://github.com/wheybags/glibc_version_header
+          - os: ubuntu-18.04
+            name: Linux
+            lib-path: build-linux/lib/libclang.so
+            build-command: ./build-native.sh
+            artifact-name: LlvmBuildOutputs-Linux
+    name: Build LLVM - ${{matrix.name}}
+    runs-on: ${{matrix.os}}
     steps:
       # ----------------------------------------------------------------------- Checkout
       - name: Checkout
@@ -47,9 +63,8 @@ jobs:
         with:
           key: llvm-output-${{runner.os}}-${{steps.llvm.outputs.revision}}
           # These are the paths of the external files required in ClangSharp.Pathogen.Runtime.csproj
-          # (Version.props is required by tooling/Versioning.props)
           # (Make sure this is syncronized with "Archive LLVM Outputs" below)
-          path: build/bin/libclang.dll
+          path: ${{matrix.lib-path}}
 
       - name: Checkout LLVM
         if: steps.cached-llvm.outputs.cache-hit != 'true'
@@ -73,21 +88,35 @@ jobs:
         if: steps.cached-llvm.outputs.cache-hit != 'true'
         run: sccache --start-server
 
+      # The GitHub hosted runners do not have Ninja installed by default
+      # We only need to do this on Linux since Visual Studio comes with a copy of Ninja and we end up picking that one up for Windows
+      - name: Install Ninja
+        if: steps.cached-llvm.outputs.cache-hit != 'true' && runner.os == 'Linux'
+        run: sudo apt install --yes ninja-build
+
       - name: Build LLVM
         if: steps.cached-llvm.outputs.cache-hit != 'true'
-        run: ./build-native.cmd
+        run: ${{matrix.build-command}}
 
       - name: Show sccache statistics
         if: steps.cached-llvm.outputs.cache-hit != 'true'
         run: sccache --show-stats
 
+      # The GitHub Actions cache gets confused by the symlink so we need to remove it
+      - name: Unsymlink libclang
+        if: steps.cached-llvm.outputs.cache-hit != 'true' && runner.os == 'Linux'
+        run: |
+          cp ${{matrix.lib-path}} ${{matrix.lib-path}}-nosymlink
+          rm ${{matrix.lib-path}}
+          mv ${{matrix.lib-path}}-nosymlink ${{matrix.lib-path}}
+
       - name: Upload LLVM build artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: LlvmBuildOutputs
+          name: ${{matrix.artifact-name}}
           if-no-files-found: error
-          # This paths listed here must match "Load cached LLVM build outputs" above
-          path: build/bin/libclang.dll
+          # The paths listed here must match "Load cached LLVM build outputs" above
+          path: ${{matrix.lib-path}}
 
   build-dotnet:
     name: Build ClangSharp.Pathogen
@@ -117,11 +146,16 @@ jobs:
           dotnet-version: 5.0.x
 
       # ----------------------------------------------------------------------- Download LLVM Build
-      - name: Download LLVM build artifacts
+      - name: Download LLVM Windows build artifacts
         uses: actions/download-artifact@v2
         with:
-          name: LlvmBuildOutputs
+          name: LlvmBuildOutputs-Windows
           path: build/bin/
+      - name: Download LLVM Linux build artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: LlvmBuildOutputs-Linux
+          path: build-linux/lib/
       
       # ----------------------------------------------------------------------- Configure versioning
       - name: Configure build
@@ -167,6 +201,7 @@ jobs:
         with:
           name: Packages
           path: packages/**
+
   publish-packages:
     name: Publish ClangSharp.Pathogen
     runs-on: ubuntu-latest
