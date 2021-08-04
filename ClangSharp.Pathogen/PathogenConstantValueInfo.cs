@@ -11,7 +11,7 @@ namespace ClangSharp.Pathogen
         /// <summary>The subkind of the constant, see remarks for details.</summary>
         /// <remarks>
         /// If <see cref="Kind"/> is <see cref="PathogenConstantValueKind.UnsignedInteger"/>, <see cref="PathogenConstantValueKind.SignedInteger"/>, or <see cref="PathogenConstantValueKind.FloatingPoint"/>: This is the size of the value in bits.
-        /// If <see cref="Kind"/> is <see cref="PathogenConstantValueKind.String"/>, this is one of <see cref="PathogenStringConstantKind"/>.
+        /// If <see cref="Kind"/> is <see cref="PathogenConstantValueKind.String"/>, this is one of <see cref="PathogenStringConstantKind"/>, potentially with WideCharBit set in the case of wchar_t.
         /// If <see cref="Kind"/> is <see cref="PathogenConstantValueKind.Unknown"/>, this is one of <see cref="ClangConstantValueKind"/>.
         /// </remarks>
         public int SubKind;
