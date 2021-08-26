@@ -75,7 +75,7 @@ These versions may seem obnoxiously verbose, but the build metadata is usually s
     <DevelopmentVersionCacheFilePath>$(MSBuildProjectDirectory)/obj/DevelopmentVersionNumber</DevelopmentVersionCacheFilePath>
 
     <!-- Load the development build version number from the cache -->
-    <DevelopmentVersionNumber Condition="Exists('$(DevelopmentVersionCacheFilePath)')">$([System.IO.File]::ReadAllText(`$(DevelopmentVersionCacheFilePath)`).Trim())</DevelopmentVersionNumber>
+    <DevelopmentVersionNumber Condition="'$(DevelopmentVersionNumber)' == '' and Exists('$(DevelopmentVersionCacheFilePath)')">$([System.IO.File]::ReadAllText(`$(DevelopmentVersionCacheFilePath)`).Trim())</DevelopmentVersionNumber>
 
     <!--
       If there was no cache, generate a new version number

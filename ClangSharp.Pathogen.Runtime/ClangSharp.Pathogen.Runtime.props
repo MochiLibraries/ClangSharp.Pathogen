@@ -1,0 +1,5 @@
+﻿<Project>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../clang-resources/**/*" LinkBase="clang-resources" Visible="false" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

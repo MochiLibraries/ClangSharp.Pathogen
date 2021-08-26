@@ -34,6 +34,7 @@ jobs:
           - os: ubuntu-18.04
             name: Linux
             lib-path: build-linux/lib/libclang.so
+            clang-resource-dir: build-linux/lib/clang/
             build-command: ./build-native.sh
             artifact-name: LlvmBuildOutputs-Linux
     name: Build LLVM - ${{matrix.name}}
@@ -61,10 +62,13 @@ jobs:
         id: cached-llvm
         uses: actions/cache@v2
         with:
-          key: llvm-output-${{runner.os}}-${{steps.llvm.outputs.revision}}
+          # Bumped to -2 to include the Clang resource directory
+          key: llvm-output-${{runner.os}}-${{steps.llvm.outputs.revision}}-2
           # These are the paths of the external files required in ClangSharp.Pathogen.Runtime.csproj
           # (Make sure this is syncronized with "Archive LLVM Outputs" below)
-          path: ${{matrix.lib-path}}
+          path: |
+            ${{matrix.lib-path}}
+            ${{matrix.clang-resource-dir}}
 
       - name: Checkout LLVM
         if: steps.cached-llvm.outputs.cache-hit != 'true'
@@ -116,7 +120,9 @@ jobs:
           name: ${{matrix.artifact-name}}
           if-no-files-found: error
           # The paths listed here must match "Load cached LLVM build outputs" above
-          path: ${{matrix.lib-path}}
+          path: |
+            ${{matrix.lib-path}}
+            ${{matrix.clang-resource-dir}}
 
   build-dotnet:
     name: Build ClangSharp.Pathogen

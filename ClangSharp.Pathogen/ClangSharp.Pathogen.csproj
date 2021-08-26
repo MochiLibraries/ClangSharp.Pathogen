@@ -21,7 +21,7 @@
       Do not use ReferenceOutputAssembly="false" here even though the reference isn't needed (and ClangSharp.Pathogen.Runtime.dll is essentially empty.)
       The reference to the assembly will be dropped during emit, and this needs to be a normal reference so that the generated NuGet package depends on the ClangSharp.Pathogen.Runtime package.
     -->
-    <ProjectReference Include="..\ClangSharp.Pathogen.Runtime\ClangSharp.Pathogen.Runtime.csproj" />
+    <ProjectReference Include="..\ClangSharp.Pathogen.Runtime\ClangSharp.Pathogen.Runtime.csproj" PrivateAssets="none" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE.txt" Pack="true" PackagePath="" Visible="false" />
