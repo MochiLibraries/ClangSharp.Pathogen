@@ -62,8 +62,7 @@ jobs:
         id: cached-llvm
         uses: actions/cache@v2
         with:
-          # Bumped to -2 to include the Clang resource directory
-          key: llvm-output-${{runner.os}}-${{steps.llvm.outputs.revision}}-2
+          key: llvm-output-${{runner.os}}-${{steps.llvm.outputs.revision}}
           # These are the paths of the external files required in ClangSharp.Pathogen.Runtime.csproj
           # (Make sure this is syncronized with "Archive LLVM Outputs" below)
           path: |

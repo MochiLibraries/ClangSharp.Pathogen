@@ -15,5 +15,10 @@ namespace ClangSharp.Pathogen
         /// For Kind = InAlloca: AllocaFieldIndex
         /// </summary>
         public readonly uint Extra;
+
+        /// <summary>
+        /// For Kind = IndirectAliased: IndirectAddrSpace
+        /// </summary>
+        public readonly uint Extra2;
     }
 }

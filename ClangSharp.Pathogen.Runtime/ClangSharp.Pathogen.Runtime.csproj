@@ -9,7 +9,7 @@
     <LibClangPathogenPathWindows>$(MSBuildThisFileDirectory)../build/bin/libclang.dll</LibClangPathogenPathWindows>
     <LibClangPathogenPathLinux>$(MSBuildThisFileDirectory)../build-linux/lib/libclang.so</LibClangPathogenPathLinux>
     <PathogenExtensionsCppPath>$(MSBuildThisFileDirectory)../external/llvm-project/clang/tools/libclang/PathogenExtensions.cpp</PathogenExtensionsCppPath>
-    <ClangResourceDirectoryPath>$(MSBuildThisFileDirectory)../build-linux/lib/clang/10.0.0/</ClangResourceDirectoryPath>
+    <ClangResourceDirectoryPath>$(MSBuildThisFileDirectory)../build-linux/lib/clang/12.0.1/</ClangResourceDirectoryPath>
     <LicenseFilePath>$(MSBuildThisFileDirectory)../external/llvm-project/clang/LICENSE.TXT</LicenseFilePath>
     
     <!-- Package Info -->

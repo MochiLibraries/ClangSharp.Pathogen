@@ -5,6 +5,7 @@
         Direct,
         Extend,
         Indirect,
+        IndirectAliased,
         Ignore,
         Expand,
         CoerceAndExpand,

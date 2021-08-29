@@ -6,7 +6,7 @@
 
 This repo contains C# bindings for the [libclang Pathogen Extensions](https://github.com/InfectedLibraries/llvm-project) as well as other utilities used by Biohazrd for interacting with ClangSharp.
 
-Currently this project targets libclang 10.0.0 and ClangSharp 10.0.0-beta. The NuGet package is currently built for Windows x64 and Linux x64 (glibc >= 2.27).
+Currently this project targets libclang 12.0.1 and ClangSharp 12.0.0-beta2. The NuGet package is currently built for Windows x64 and Linux x64 (glibc >= 2.27).
 
 ## License
 
