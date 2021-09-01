@@ -1,9 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Platforms>x64</Platforms>
-    <PlatformTarget>x64</PlatformTarget>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     
     <!-- Paths to LLVM things -->
     <LibClangPathogenPathWindows>$(MSBuildThisFileDirectory)../build/bin/libclang.dll</LibClangPathogenPathWindows>
@@ -20,8 +17,6 @@
     <PackageLicenseExpression>(Apache-2.0 WITH LLVM-exception) OR NCSA</PackageLicenseExpression>
     -->
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <VersionPrefix>0.0.0</VersionPrefix>
-    <IncludeLlvmSourceRevisionInVersion>true</IncludeLlvmSourceRevisionInVersion>
     <Description>Runtime package for ClangSharp.Pathogen, not intended for direct consumption.</Description>
     <Authors>LLVM Team and David Maas</Authors>
     <!-- LLVM does not have a good canonical copyright string. They're supposed to put it in their source file as part of Apache 2.0 but they don't. -->

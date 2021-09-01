@@ -1,0 +1,32 @@
+<Project>
+  <PropertyGroup>
+    <!-- Common C# Properties -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Features>strict</Features>
+    <AnalysisLevel>5.0</AnalysisLevel>
+
+    <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
+
+    <!-- Common NuGet Package Properties -->
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/InfectedLibraries</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <!-- Ignore warnings about stable packages referencing pre-release ones. -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
+
+    <!-- Emit modern symbol packages -->
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- Embed untracked sources in the PDB -->
+    <EmbedUntrackedSources Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</EmbedUntrackedSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Enable Source Link -->
+    <!--
+      Even though it isn't useful for ClangSharp.Pathogen.Runtime, we still want to enable this
+      everywhere since it populates the repository information on the NuGet packages.
+    -->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,22 @@
+<Project>
+  <!-- Determine package versions -->
+  <PropertyGroup Condition="'$(ContinuousIntegrationBuild)' != 'true'">
+    <DevVersion Condition="'$(DevVersion)' == ''">0</DevVersion>
+    <Version>0.0.0-dev$(DevVersion)</Version>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ContinuousIntegrationBuild)' == 'true'">
+    <Version>$(CiBuildVersion)</Version>
+  </PropertyGroup>
+
+  <Target Name="EnsureCiBuildsHaveVersion" BeforeTargets="Build;Pack" Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(CiBuildVersion)' == ''">
+    <Error Text="ContinuousIntegrationBuild is enabled without specifying version number!" />
+  </Target>
+
+  <!-- Use the informational version (which includes the Git revision) for the package version -->
+  <Target Name="UseInformationalVersionForPackageVersion" BeforeTargets="GenerateNuspec;_GetOutputItemsFromPack" DependsOnTargets="AddSourceRevisionToInformationalVersion">
+    <Error Text="SourceRevisionId is missing." Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(SourceRevisionId)' == ''" />
+    <PropertyGroup>
+      <PackageVersion>$(InformationalVersion)</PackageVersion>
+    </PropertyGroup>
+  </Target>
+</Project>

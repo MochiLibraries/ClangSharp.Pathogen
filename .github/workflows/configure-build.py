@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-import hashlib
 import os
 import re
-import sys
 
 import gha
 
@@ -21,73 +19,41 @@ def get_environment_variable(name):
     return ret
 
 github_event_name = get_environment_variable('github_event_name')
-github_repository_owner = get_environment_variable('github_repository_owner')
 github_run_number = get_environment_variable('github_run_number')
-github_ref = get_environment_variable('github_ref')
 
-# This is obtuse because you shouldn't be trying to set this for forks of this repository!
-is_official_source = get_environment_variable('is_official_source') or ''
-is_official_source_hash = hashlib.sha256(is_official_source.encode()).hexdigest()
-is_official_source = is_official_source_hash == '2979f945cc91048fcc6a18abfb47b95727b32ca688371882f5b900f55f2bf87a'
+#==================================================================================================
+# Determine build settings
+#==================================================================================================
 
-will_publish_packages = False
-is_preview_release = False
-preview_release_version = f"invalid{github_run_number}"
-is_full_release = False
+version = f'0.0.0-ci{github_run_number}'
+configuration = 'Debug'
 
-if github_event_name == 'push':
-    # Publish packages if the push is to the main branch
-    will_publish_packages = github_ref == 'refs/heads/main'
-elif github_event_name == 'pull_request':
-    # Never publish packages for pull requests
-    will_publish_packages = False
+if github_event_name == 'release':
+    version = get_environment_variable('release_version')
+    configuration = 'Release'
 elif github_event_name == 'workflow_dispatch':
-    # Publish packages if enabled by the user
-    will_publish_packages = get_environment_variable('input_will_publish_packages') == 'true'
-    
-    preview_release_version = get_environment_variable('input_preview_release_version')
-    is_preview_release = preview_release_version != None
+    workflow_dispatch_version = get_environment_variable('workflow_dispatch_version')
+    if workflow_dispatch_version is not None:
+        version = workflow_dispatch_version
+        configuration = 'Release'
 
-    is_full_release = get_environment_variable('input_do_full_release') == 'true'
+# Trim leading v off of version if present
+if version.startswith('v'):
+    version = version[1:]
 
-    if is_preview_release and re.match('^[0-9a-zA-Z.-]+$', preview_release_version) is None:
-        gha.print_error(f"'{preview_release_version}' is not a valid preview release identifier.")
-    
-    if is_full_release and is_preview_release:
-        gha.print_error(f"A release cannot be both a full release and a preview release.")
-    
-    if is_full_release and not is_official_source:
-        gha.print_warning("Full release should probably not be created by third parties.")
-else:
-    gha.print_warning(f"Unexpected GitHub event '{github_event_name}'")
+# Validate the version number
+if not re.match('^\d+\.\d+\.\d+(-[0-9a-zA-Z.-]+)?$', version):
+    gha.print_error(f"'{version}' is not a valid semver version!")
 
 # If there are any errors at this point, make sure we exit with an error code
 gha.fail_if_errors()
 
 #==================================================================================================
-# Emit MSBuild Properties
+# Emit MSBuild properties
 #==================================================================================================
-gha.set_environment_variable('ContinuousIntegrationBuild', 'true')
-
-if is_preview_release:
-    gha.set_environment_variable('Configuration', 'Release')
-    gha.set_environment_variable('ContinuousIntegrationBuildKind', 'PreviewRelease')
-    gha.set_environment_variable('PreviewReleaseVersion', preview_release_version)
-elif is_full_release:
-    gha.set_environment_variable('Configuration', 'Release')
-    gha.set_environment_variable('ContinuousIntegrationBuildKind', 'FullRelease')
-else:
-    gha.set_environment_variable('Configuration', 'Debug')
-    gha.set_environment_variable('ContinousIntegrationRunNumber', github_run_number)
-
-# If this build is happening outside of InfectedLibraries, add a fork name
-if not is_official_source:
-    gha.set_environment_variable('ForkName', github_repository_owner)
-
-#==================================================================================================
-# Emit step outputs
-#==================================================================================================
-gha.set_output('publish-to-github', will_publish_packages)
+print(f"Configuring build environment to build {configuration.lower()} @ {version}")
+gha.set_environment_variable('Configuration', configuration)
+gha.set_environment_variable('CiBuildVersion', version)
 
 #==================================================================================================
 # Final check to exit with an error code if any errors were printed

@@ -1,14 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <Platforms>x64</Platforms>
-    <PlatformTarget>x64</PlatformTarget>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     
     <!-- Package Info -->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <VersionPrefix>0.0.0</VersionPrefix>
-    <Description>C# bindings for libclang Pathogen Extensions and other utilities for working with ClangSharp.</Description>
+    <PackageDescription>This package exists primarily to support Biohazrd and is not intended for direct consumption.&#10;&#10;C# bindings for libclang Pathogen Extensions and other utilities for working with ClangSharp.</PackageDescription>
     <Authors>David Maas and Contributors</Authors>
     <Copyright>Copyright David Maas and Contributors</Copyright>
     <IncludeSymbols>true</IncludeSymbols>
