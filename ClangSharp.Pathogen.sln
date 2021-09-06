@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30309.148
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31612.314
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClangSharp.Pathogen", "ClangSharp.Pathogen\ClangSharp.Pathogen.csproj", "{ADCA9D07-0CAB-4D1F-92DD-69189D520EFB}"
 EndProject

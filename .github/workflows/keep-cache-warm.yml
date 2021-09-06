@@ -1,0 +1,84 @@
+# Normally GitHub automatically evicts cache entires which have not been accessed in over a week.
+# This can be pretty annoying for this repo because it takes around 2 hours to build LLVM from scratch.
+# This periodic workflow keeps the cache from expiring.
+#
+# Note that this workflow uses a fork of the GitHub Actions Cache action.
+# This fork disables the action's logic for saving the cache at the end of the workflow, which is important here since we just want to restore it to keep it alive.
+# Also note that internally the cache key depends on the paths used, so we need those to match the main workflow as well.
+name: Keep cache warm
+on:
+  schedule:
+    # The general intent here is that this workflow runs every 5 days.
+    # However this can't actually be expressed with cron syntax since it operates on a calendar and has no knowledge of when the last run was.
+    # As such it actually runs on the 1st of the month and every day-of-month which is a multiple of 5.
+    # The reason we run it on the 1st of the month is because we'd end up letting the cache expire between February and March since there would be too much
+    # time between February 25th and March 5th.
+    # https://crontab.guru/#0_8_1,*/5_*_*
+    - cron: '0 8 1,*/5 * *'
+  workflow_dispatch:
+jobs:
+  warm-cache:
+    # This entire strategy is copy+pasted from the main build workflow
+    # Ideally we wouldn't need a build matirx for this, but it makes it easier to share the configuration between this file and the main workflow
+    # Additionally, the paths used for the cache are internally considered part of the key and as such must match and some are OS-depndent.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows
+            lib-path: build/bin/libclang.dll
+            build-command: ./build-native.cmd
+            artifact-name: LlvmBuildOutputs-Windows
+          # We use Ubuntu 18.04 so that the binary is usable on systems using glibc 2.27 and later
+          # If we want to support even older versions we should explore building libclang with https://github.com/wheybags/glibc_version_header
+          - os: ubuntu-18.04
+            name: Linux
+            lib-path: build-linux/lib/libclang.so
+            clang-resource-dir: build-linux/lib/clang/
+            build-command: ./build-native.sh
+            artifact-name: LlvmBuildOutputs-Linux
+    name: Warm cache - ${{matrix.name}}
+    runs-on: ${{matrix.os}}
+    steps:
+      # ----------------------------------------------------------------------- Checkout
+      - name: Checkout
+        # We intentionally don't checkout submodules here
+        # They will be restored as needed only if we need to build LLVM.
+        uses: actions/checkout@v2
+
+      # ----------------------------------------------------------------------- Setup Python
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      # ----------------------------------------------------------------------- Get LLVM Revision
+      - name: Get LLVM Revision
+        id: llvm
+        run: python .github/workflows/get-llvm-revision.py
+
+      # ----------------------------------------------------------------------- Install sccache
+      # (This is necessary because we need the location used for the cache root later on)
+      - name: Install sccache
+        id: sccache
+        run: python .github/workflows/install-sccache.py
+      
+      # ----------------------------------------------------------------------- Warm LLVM build outputs
+      - name: Load cached LLVM build outputs
+        id: cached-llvm
+        uses: PathogenDavid/cache@no-save-v2
+        with:
+          key: llvm-output-${{runner.os}}-${{steps.llvm.outputs.revision}}
+          path: |
+            ${{matrix.lib-path}}
+            ${{matrix.clang-resource-dir}}
+
+      # ----------------------------------------------------------------------- Warm sccache cache
+      - name: Load LLVM sccache
+        id: cached-sccache
+        uses: PathogenDavid/cache@no-save-v2
+        with:
+          path: ${{steps.sccache.outputs.root-directory}}
+          key: sccache-cache-${{runner.os}}-${{steps.llvm.outputs.revision}}
+          restore-keys: sccache-cache-${{runner.os}}-

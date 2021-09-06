@@ -62,6 +62,7 @@ jobs:
       - name: Load cached LLVM build outputs
         id: cached-llvm
         uses: actions/cache@v2
+        # If you change this configuration make sure to update keep-cache-warm.yml as well.
         with:
           key: llvm-output-${{runner.os}}-${{steps.llvm.outputs.revision}}
           # These are the paths of the external files required in ClangSharp.Pathogen.Runtime.csproj
@@ -83,6 +84,7 @@ jobs:
         id: cached-sccache
         if: steps.cached-llvm.outputs.cache-hit != 'true'
         uses: actions/cache@v2
+        # If you change this configuration make sure to update keep-cache-warm.yml as well.
         with:
           path: ${{steps.sccache.outputs.root-directory}}
           key: sccache-cache-${{runner.os}}-${{steps.llvm.outputs.revision}}
