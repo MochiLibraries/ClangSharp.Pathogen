@@ -15,8 +15,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tooling", "tooling", "{543C6D77-9322-4328-9A08-05F124A261CC}"
 	ProjectSection(SolutionItems) = preProject
-		tooling\Versioning.props = tooling\Versioning.props
-		tooling\Versioning.targets = tooling\Versioning.targets
+		tooling\Common.csproj.props = tooling\Common.csproj.props
+		tooling\Common.csproj.targets = tooling\Common.csproj.targets
+		tooling\Common.props = tooling\Common.props
+		tooling\Common.targets = tooling\Common.targets
 	EndProjectSection
 EndProject
 Global
