@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">$(NETCoreSdkRuntimeIdentifier)</RuntimeIdentifier>
+
+    <!--  Determine path to Clang resources -->
+    <ClangResourceDirectoryPath>$(LlvmBuildOutputRoot)linux-x64/lib/clang/$(LlvmVersion)/</ClangResourceDirectoryPath>
+    <!-- For local builds allow using non-linux-x64 resources -->
+    <ClangResourceDirectoryPath Condition="'$(ContinuousIntegrationBuild)' != 'true' and !Exists('$(ClangResourceDirectoryPath)')">$(LlvmBuildOutputRoot)$(RuntimeIdentifier)/lib/clang/$(LlvmVersion)/</ClangResourceDirectoryPath>
+
+    <!-- Package Info -->
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <Description>This package exists primarily to support Biohazrd and is not intended for direct consumption.&#10;&#10;Clang's supporting resource files.</Description>
+    <!-- This package only contains unmodified Clang files so we only list LLVM Team as the author/copyright holder. -->
+    <Authors>LLVM Team</Authors>
+    <!-- LLVM does not have a good canonical copyright string. They're supposed to put it in their source file as part of Apache 2.0 but they don't. -->
+    <Copyright>LLVM copyright (c) 2003-2019 University of Illinois at Urbana-Champaign, LLVM Team.</Copyright>
+
+    <!-- This package is only for Clang's supporting resources, don't try to build/pack the .NET assembly or specify a framework dependency -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Condition="Exists('$(ClangLicensePath)')" Include="$(ClangLicensePath)" Link="LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
+    <None Include="$(ClangResourceDirectoryPath)**/*" LinkBase="clang-resources" Condition="Exists('$(ClangResourceDirectoryPath)')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>true</Pack>
+      <!--
+      We use MSBuild to copy the Clang resource directory to the build output of dependents using MSBuild instead of ContentFiles primarily to avoid having them pollute Solution Explorer:
+      https://github.com/NuGet/Home/issues/4856
+      -->
+      <PackagePath>clang-resources/</PackagePath>
+    </None>
+    <None Update="ClangSharp.Pathogen.ClangResources.props">
+      <Pack>true</Pack>
+      <!--
+      buildTransitive is required to ensure the resource directory is also copied to indirect dependents
+      We put the props file in both build and buildTransitive for legacy compatibility even though we don't really expect legacy consumers. (IE: Visual Studio 2017)
+      NuGet will only use the one from buildTransitive when it's buildTransitive-aware.
+      https://github.com/NuGet/Home/wiki/Allow-package%2D-authors-to-define-build-assets-transitive-behavior
+      -->
+      <PackagePath>build;buildTransitive</PackagePath>
+    </None>
+  </ItemGroup>
+  <!-- Error if any of the required files are missing -->
+  <Target Name="_ClangResourceChecks" BeforeTargets="Build;Pack">
+    <Error Text="Clang LICENSE.TXT is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(ClangLicensePath)')" />
+    <Error Text="Clang resource directory is missing." Condition="!Exists('$(ClangResourceDirectoryPath)')" />
+  </Target>
+</Project>

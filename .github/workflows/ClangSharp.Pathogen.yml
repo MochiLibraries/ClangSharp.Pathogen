@@ -20,24 +20,37 @@ env:
   DOTNET_GENERATE_ASPNET_CERTIFICATE: false
   ContinuousIntegrationBuild: true
 jobs:
+  # =====================================================================================================================================================================
+  # Build LLVM
+  # =====================================================================================================================================================================
   build-llvm:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
-            name: Windows
-            lib-path: build/bin/libclang.dll
+          - os: windows-2019
+            name: Windows x64
+            rid: win-x64
+            libclang-subpath: bin/libclang.dll
             build-command: ./build-native.cmd
-            artifact-name: LlvmBuildOutputs-Windows
           # We use Ubuntu 18.04 so that the binary is usable on systems using glibc 2.27 and later
           # If we want to support even older versions we should explore building libclang with https://github.com/wheybags/glibc_version_header
           - os: ubuntu-18.04
-            name: Linux
-            lib-path: build-linux/lib/libclang.so
-            clang-resource-dir: build-linux/lib/clang/
+            name: Linux x64
+            rid: linux-x64
+            libclang-subpath: lib/libclang.so
             build-command: ./build-native.sh
-            artifact-name: LlvmBuildOutputs-Linux
+          - os: ubuntu-arm64-latest
+            name: Linux ARM64
+            rid: linux-arm64
+            libclang-subpath: lib/libclang.so
+            build-command: ./build-native.sh
+            skip-python-install: true
+          - os: macos-10.15
+            name: MacOS x64
+            rid: osx-x64
+            libclang-subpath: lib/libclang.dylib
+            build-command: ./build-native.sh
     name: Build LLVM - ${{matrix.name}}
     runs-on: ${{matrix.os}}
     steps:
@@ -49,6 +62,7 @@ jobs:
 
       # ----------------------------------------------------------------------- Setup Python
       - name: Setup Python 3.8
+        if: matrix.skip-python-install != true
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
@@ -64,12 +78,13 @@ jobs:
         uses: actions/cache@v2
         # If you change this configuration make sure to update keep-cache-warm.yml as well.
         with:
-          key: llvm-output-${{runner.os}}-${{steps.llvm.outputs.revision}}
-          # These are the paths of the external files required in ClangSharp.Pathogen.Runtime.csproj
+          key: llvm-output-${{matrix.rid}}-${{steps.llvm.outputs.revision}}
+          # These are the paths of the files required by ClangSharp.Pathogen.Native and ClangSharp.Pathogen.ClangResources
           # (Make sure this is syncronized with "Archive LLVM Outputs" below)
           path: |
-            ${{matrix.lib-path}}
-            ${{matrix.clang-resource-dir}}
+            bin/llvm/${{matrix.rid}}/${{matrix.libclang-subpath}}
+            bin/llvm/${{matrix.rid}}/lib/clang/
+            external/llvm-project/clang/LICENSE.TXT
 
       - name: Checkout LLVM
         if: steps.cached-llvm.outputs.cache-hit != 'true'
@@ -88,18 +103,21 @@ jobs:
         # If you change this configuration make sure to update keep-cache-warm.yml as well.
         with:
           path: ${{steps.sccache.outputs.root-directory}}
-          key: sccache-cache-${{runner.os}}-${{steps.llvm.outputs.revision}}
-          restore-keys: sccache-cache-${{runner.os}}-
+          key: sccache-cache-${{matrix.rid}}-${{steps.llvm.outputs.revision}}
+          restore-keys: sccache-cache-${{matrix.rid}}-
 
       - name: Start sccache server
         if: steps.cached-llvm.outputs.cache-hit != 'true'
         run: sccache --start-server
 
       # The GitHub hosted runners do not have Ninja installed by default
-      # We only need to do this on Linux since Visual Studio comes with a copy of Ninja and we end up picking that one up for Windows
-      - name: Install Ninja
+      # This is not necessary on Windows since Visual Studio comes with a copy of Ninja and we end up picking that one up for Windows
+      - name: Install Ninja on Linux
         if: steps.cached-llvm.outputs.cache-hit != 'true' && runner.os == 'Linux'
-        run: sudo apt install --yes ninja-build
+        run: sudo apt-get install --yes ninja-build
+      - name: Install Ninja on macOS
+        if: steps.cached-llvm.outputs.cache-hit != 'true' && runner.os == 'macOS'
+        run: brew install ninja
 
       - name: Build LLVM
         if: steps.cached-llvm.outputs.cache-hit != 'true'
@@ -118,38 +136,87 @@ jobs:
             ${{steps.sccache.outputs.log-file-path}}
             ${{steps.sccache.outputs.root-directory}}/sccache-stats.txt
 
+      # ----------------------------------------------------------------------- Pack Runtime Packages
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Configure versioning
+        run: python .github/workflows/configure-build.py
+        env:
+          github_event_name: ${{github.event_name}}
+          github_run_number: ${{github.run_number}}
+          release_version: ${{github.event.release.tag_name}}
+          workflow_dispatch_version: ${{github.event.inputs.version}}
+
+      # SourceLink will complain about the LLVM submodule missing even though it doesn't need it
+      # If we didn't clone the LLVM submodule we need to delete .gitmodules so it can chill
+      # (Workaround for https://github.com/dotnet/sourcelink/issues/675)
+      - name: Clear .gitmodules
+        if: steps.cached-llvm.outputs.cache-hit == 'true'
+        run: rm .gitmodules
+
+      - name: Restore ClangSharp.Pathogen.Native
+        run: dotnet restore ClangSharp.Pathogen.Native
+
+      - name: Pack ClangSharp.Pathogen.Native.${{matrix.rid}}
+        run: dotnet pack ClangSharp.Pathogen.Native --no-build --configuration Release /p:RuntimeIdentifier=${{matrix.rid}}
+
+      # The Clang resources are the same across all platforms so we only publish a single package based on the linux-x64 build
+      - name: Pack ClangSharp.Pathogen.ClangResources
+        if: matrix.rid == 'linux-x64'
+        run: |
+          dotnet restore ClangSharp.Pathogen.ClangResources
+          dotnet pack ClangSharp.Pathogen.ClangResources --no-build --configuration Release
+
+      # ----------------------------------------------------------------------- Upload Artifacts
       # The GitHub Actions cache gets confused by the symlink so we need to remove it
       - name: Unsymlink libclang
         if: steps.cached-llvm.outputs.cache-hit != 'true' && runner.os == 'Linux'
         run: |
-          cp ${{matrix.lib-path}} ${{matrix.lib-path}}-nosymlink
-          rm ${{matrix.lib-path}}
-          mv ${{matrix.lib-path}}-nosymlink ${{matrix.lib-path}}
+          cp bin/llvm/${{matrix.rid}}/${{matrix.libclang-subpath}} bin/llvm/${{matrix.rid}}/${{matrix.libclang-subpath}}-nosymlink
+          rm bin/llvm/${{matrix.rid}}/${{matrix.libclang-subpath}}
+          mv bin/llvm/${{matrix.rid}}/${{matrix.libclang-subpath}}-nosymlink bin/llvm/${{matrix.rid}}/${{matrix.libclang-subpath}}
 
-      - name: Upload LLVM build artifacts
+      - name: Collect Build Outputs
         uses: actions/upload-artifact@v2
+        # We always want to collect any build outputs that were created even if building failed
+        if: always()
         with:
-          name: ${{matrix.artifact-name}}
+          name: llvm-${{matrix.rid}}
           if-no-files-found: error
           # The paths listed here must match "Load cached LLVM build outputs" above
           path: |
-            ${{matrix.lib-path}}
-            ${{matrix.clang-resource-dir}}
+            bin/llvm/${{matrix.rid}}/${{matrix.libclang-subpath}}
+            bin/llvm/${{matrix.rid}}/lib/clang/
+            external/llvm-project/clang/LICENSE.TXT
 
+      - name: Collect NuGet Packages
+        uses: actions/upload-artifact@v2
+        # We always want to collect any packages that were created even if building failed
+        if: always()
+        with:
+          name: llvm-${{matrix.rid}}-packages
+          if-no-files-found: error
+          path: packages/**
+
+  # =====================================================================================================================================================================
+  # Build ClangSharp.Pathogen
+  # =====================================================================================================================================================================
   build-dotnet:
     name: Build ClangSharp.Pathogen
     runs-on: ubuntu-latest
-    needs: build-llvm
-    outputs:
-      publish-to-github: ${{steps.configuration.outputs.publish-to-github}}
     steps:
       # ----------------------------------------------------------------------- Checkout
       - name: Checkout
         uses: actions/checkout@v2
-        # Sadly we need to check out submodules here to make SourceLink happy.
-        # (Ideally we'd just archive libclang.dll along with the handful of files ClangSharp.Pathogen.Runtime needs to build the NuGet package.)
-        with:
-          submodules: 'recursive'
+
+      # SourceLink will complain about the LLVM submodule missing even though it doesn't need it
+      # If we didn't clone the LLVM submodule we need to delete .gitmodules so it can chill
+      # (Workaround for https://github.com/dotnet/sourcelink/issues/675)
+      - name: Clear .gitmodules
+        run: rm .gitmodules
 
       # ----------------------------------------------------------------------- Setup Python
       - name: Setup Python 3.8
@@ -163,21 +230,8 @@ jobs:
         with:
           dotnet-version: 5.0.x
 
-      # ----------------------------------------------------------------------- Download LLVM Build
-      - name: Download LLVM Windows build artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: LlvmBuildOutputs-Windows
-          path: build/bin/
-      - name: Download LLVM Linux build artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: LlvmBuildOutputs-Linux
-          path: build-linux/lib/
-      
-      # ----------------------------------------------------------------------- Configure versioning
+      # ----------------------------------------------------------------------- Configure Versioning
       - name: Configure build
-        id: configuration
         run: python .github/workflows/configure-build.py
         env:
           github_event_name: ${{github.event_name}}
@@ -185,16 +239,16 @@ jobs:
           release_version: ${{github.event.release.tag_name}}
           workflow_dispatch_version: ${{github.event.inputs.version}}
 
-      # ----------------------------------------------------------------------- Build ClangSharp.Pathogen
+      # ----------------------------------------------------------------------- Build and Pack ClangSharp.Pathogen
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore ClangSharp.Pathogen
 
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build ClangSharp.Pathogen --no-restore --configuration Release
 
       - name: Pack
         id: pack
-        run: dotnet pack --no-build
+        run: dotnet pack ClangSharp.Pathogen --no-build --configuration Release
 
       # ----------------------------------------------------------------------- Collect Artifacts
       - name: Collect Build Outputs
@@ -202,27 +256,65 @@ jobs:
         # We always want to collect any build outputs that were created even if building failed
         if: always()
         with:
-          name: BuildOutputs
-          # The build* folders is fine here because LLVM was built in another job so these will just be the stuff required to build
+          name: ClangSharp.Pathogen-build-output
           path: |
             bin/**
             obj/**
-            build*/**
-            !build-*.*
 
       - name: Collect NuGet Packages
         uses: actions/upload-artifact@v2
         # We always want to collect packages when they were produced
         if: steps.pack.outcome == 'success' && always()
         with:
-          name: Packages
+          name: ClangSharp.Pathogen-packages
           if-no-files-found: error
           path: packages/**
 
+  # =====================================================================================================================================================================
+  # Coalesce Packages
+  # =====================================================================================================================================================================
+  coalesce-packages:
+    name: Coalesce Packages
+    runs-on: ubuntu-latest
+    needs: [build-llvm, build-dotnet]
+    steps:
+      # ----------------------------------------------------------------------- Download Packages
+      - name: Download LLVM Windows x64 packages
+        uses: actions/download-artifact@v2
+        with:
+          name: llvm-win-x64-packages
+      - name: Download LLVM Linux x64 packages
+        uses: actions/download-artifact@v2
+        with:
+          name: llvm-linux-x64-packages
+      - name: Download LLVM Linux ARM64 packages
+        uses: actions/download-artifact@v2
+        with:
+          name: llvm-linux-arm64-packages
+      - name: Download LLVM macOS x64 packages
+        uses: actions/download-artifact@v2
+        with:
+          name: llvm-osx-x64-packages
+      - name: Download ClangSharp.Pathogen packages
+        uses: actions/download-artifact@v2
+        with:
+          name: ClangSharp.Pathogen-packages
+
+      # ----------------------------------------------------------------------- Upload Combined Packages Artifact
+      - name: Collect NuGet Packages
+        uses: actions/upload-artifact@v2
+        with:
+          name: Packages
+          if-no-files-found: error
+          path: '**'
+
+  # =====================================================================================================================================================================
+  # Publish NuGet Packages to GitHub
+  # =====================================================================================================================================================================
   publish-packages-github:
     name: Publish to GitHub
     runs-on: ubuntu-latest
-    needs: build-dotnet
+    needs: coalesce-packages
     # Pushes to main always publish CI packages
     # Published releases always publish packages
     # A manual workflow only publishes packages if explicitly enabled
@@ -239,7 +331,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Packages
-      
+
       # ----------------------------------------------------------------------- Upload release assets
       - name: Upload release assets
         if: github.event_name == 'release'
@@ -281,11 +373,14 @@ jobs:
         env:
           # This is a workaround for https://github.com/NuGet/Home/issues/9775
           DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
-  
+
+  # =====================================================================================================================================================================
+  # Publish NuGet Packages to NuGet.org
+  # =====================================================================================================================================================================
   publish-packages-nuget-org:
     name: Publish to NuGet.org
     runs-on: ubuntu-latest
-    needs: build-dotnet
+    needs: coalesce-packages
     environment: NuGet.org
     # Release builds always publish packages to NuGet.org
     # Workflow dispatch builds will only publish packages if enabled and an explicit version number is given
@@ -310,9 +405,12 @@ jobs:
           # This is a workaround for https://github.com/NuGet/Home/issues/9775
           DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
 
+  # =====================================================================================================================================================================
+  # Send CI Failure Notification
+  # =====================================================================================================================================================================
   send-ci-failure-notification:
     name: Send CI Failure Notification
-    needs: [build-llvm, build-dotnet, publish-packages-github, publish-packages-nuget-org]
+    needs: [build-llvm, build-dotnet, coalesce-packages, publish-packages-github, publish-packages-nuget-org]
     if: failure() && github.event_name != 'pull_request'
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -326,7 +424,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
-      
+
       # ----------------------------------------------------------------------- Send CI Failure Notification
       - name: Send Notification
         run: python .github/workflows/send-ci-failure-notification.py

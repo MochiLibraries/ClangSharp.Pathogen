@@ -1,7 +1,15 @@
-#!/usr/bin/env bash
+#!/bin/bash -Eeu
+
+# Start in the directory containing this script
+cd `dirname "${BASH_SOURCE[0]}"`
+
+# Determine platform RID and build folder
+PLATFORM_RID=`./tooling/determine-rid.sh`
+echo "Building libclang for $PLATFORM_RID..."
+BUILD_FOLDER=bin/llvm/$PLATFORM_RID
 
 # Initialize cmake (if necessary)
-if [[ ! -f "build-linux/build.ninja" ]]; then
+if [[ ! -f "$BUILD_FOLDER/build.ninja" ]]; then
     CMAKE_EXTRA_ARGUMENTS=""
 
     # If sccache is installed, use it
@@ -12,7 +20,7 @@ if [[ ! -f "build-linux/build.ninja" ]]; then
     fi
 
     # Configure
-    cmake -G "Ninja" -S external/llvm-project/llvm/ -B build-linux \
+    cmake -G "Ninja" -S external/llvm-project/llvm/ -B "$BUILD_FOLDER" \
         -DCMAKE_C_COMPILER=clang \
         -DCMAKE_CXX_COMPILER=clang++ \
         -DCMAKE_BUILD_TYPE=Release \
@@ -23,4 +31,4 @@ if [[ ! -f "build-linux/build.ninja" ]]; then
 fi
 
 # Invoke Ninja
-ninja -C build-linux libclang
+ninja -C "$BUILD_FOLDER" libclang

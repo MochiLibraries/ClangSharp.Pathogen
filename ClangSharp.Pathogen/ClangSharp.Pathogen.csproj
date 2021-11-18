@@ -14,29 +14,6 @@
     <PackageReference Include="ClangSharp" Version="[12.0.0-beta2]" />
   </ItemGroup>
   <ItemGroup>
-    <!--
-      Do not use ReferenceOutputAssembly="false" here even though the reference isn't needed (and ClangSharp.Pathogen.Runtime.dll is essentially empty.)
-      The reference to the assembly will be dropped during emit, and this needs to be a normal reference so that the generated NuGet package depends on the ClangSharp.Pathogen.Runtime package.
-    -->
-    <ProjectReference Include="..\ClangSharp.Pathogen.Runtime\ClangSharp.Pathogen.Runtime.csproj" PrivateAssets="none" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\LICENSE.txt" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
-
-  <!--
-    This ensures only the exact matching version of ClangSharp.Pathogen.Runtime is used
-    This target is taken from https://github.com/NuGet/Home/issues/5556#issuecomment-585482714
-  -->
-  <Target Name="UseExactProjectReferenvePackageVersions" AfterTargets="_GetProjectReferenceVersions">
-    <ItemGroup>
-      <_ProjectReferencesWithExactVersions Include="@(_ProjectReferencesWithVersions)">
-        <ProjectVersion>[%(_ProjectReferencesWithVersions.ProjectVersion)]</ProjectVersion>
-      </_ProjectReferencesWithExactVersions>
-    </ItemGroup>
-    <ItemGroup>
-      <_ProjectReferencesWithVersions Remove="@(_ProjectReferencesWithVersions)" />
-      <_ProjectReferencesWithVersions Include="@(_ProjectReferencesWithExactVersions)" />
-    </ItemGroup>
-  </Target>
 </Project>

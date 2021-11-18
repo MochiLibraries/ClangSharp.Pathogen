@@ -19,4 +19,42 @@
       <PackageVersion>$(InformationalVersion)</PackageVersion>
     </PropertyGroup>
   </Target>
+
+  <!--
+    These targets generate files which ensure consumers don't unintentionally mix and match package versions since we don't support that.
+    (None of these packages directly depend on eachother so we can't rely on NuGet to enforce things for us.)
+    GeneratePackageVersionFile lives here purely for the sake of keeping things in the same place.
+  -->
+  <Target Name="GeneratePackageVersionFile" BeforeTargets="GenerateNuspec;_GetPackageFiles;Pack;Build" Condition="'$(MSBuildProjectName)' == 'ClangSharp.Pathogen'">
+    <PropertyGroup>
+      <_MsBuildVersionFilePath>$(IntermediateOutputPath)$(PackageId).props</_MsBuildVersionFilePath>
+      <_MsBuildVersionFilePathContents>
+        <![CDATA[<Project>
+  <PropertyGroup>
+    <ClangSharpPathogenPackageVersion>$(Version)</ClangSharpPathogenPackageVersion>
+  </PropertyGroup>
+</Project>]]>
+      </_MsBuildVersionFilePathContents>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(_MsBuildVersionFilePath)" Overwrite="true" WriteOnlyWhenDifferent="true" Lines="$(_MsBuildVersionFilePathContents)" />
+    <ItemGroup>
+      <None Include="$(_MsBuildVersionFilePath)" Pack="true" Visible="false" PackagePath="build;buildTransitive" />
+    </ItemGroup>
+  </Target>
+  <Target Name="GeneratePackageVersionValidationFile" BeforeTargets="GenerateNuspec;_GetPackageFiles;Pack;Build" Condition="'$(MSBuildProjectName)' != 'ClangSharp.Pathogen'">
+    <PropertyGroup>
+      <_MsBuildVersionValidationFilePath>$(IntermediateOutputPath)$(PackageId).targets</_MsBuildVersionValidationFilePath>
+      <_MsBuildVersionValidationFilePathContents>
+        <![CDATA[<Project>
+  <Target Name="ValidateClangSharpPathogenVersionIsCompatibleWith$(PackageId.Replace('.', ''))" BeforeTargets="Pack%3BBuild" Condition="'%24(SuppressClangSharpPathogenVersionValidation)' != 'true' and '%24(ClangSharpPathogenPackageVersion)' != '' and '%24(ClangSharpPathogenPackageVersion)' != '$(Version)'">
+    <Error Text="$(PackageId) $(Version) is not compatible with ClangSharp.Pathogen %24(ClangSharpPathogenPackageVersion)!" />
+  </Target>
+</Project>]]>
+      </_MsBuildVersionValidationFilePathContents>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(_MsBuildVersionValidationFilePath)" Overwrite="true" WriteOnlyWhenDifferent="true" Lines="$(_MsBuildVersionValidationFilePathContents)" />
+    <ItemGroup>
+      <None Include="$(_MsBuildVersionValidationFilePath)" Pack="true" Visible="false" PackagePath="build;buildTransitive" />
+    </ItemGroup>
+  </Target>
 </Project>

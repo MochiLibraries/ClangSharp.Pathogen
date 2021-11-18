@@ -1,5 +1,6 @@
 ﻿using ClangSharp.Interop;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -26,6 +27,23 @@ namespace ClangSharp.Pathogen
             NativeLibrary.SetDllImportResolver(typeof(LibClangSharpResolver).Assembly, resolver);
         }
 
+        /// <summary>Attempts to explicitly load the ClangSharp.Pathogen native runtime and reports whether it was loaded successfully.</summary>
+        /// <exception cref="InvalidOperationException">A different thread loaded a different native runtime while we were checking.</exception>
+        public static bool TryLoadExplicitly()
+        {
+            if (NativeRuntimeHandle != IntPtr.Zero)
+            { return true; }
+
+            if (!NativeLibrary.TryLoad(PathogenExtensions.LibraryFileName, typeof(LibClangSharpResolver).Assembly, searchPath: null, out IntPtr nativeRuntimeHandle))
+            { return false; }
+
+            IntPtr oldHandle = Interlocked.CompareExchange(ref NativeRuntimeHandle, nativeRuntimeHandle, IntPtr.Zero);
+            if (oldHandle == IntPtr.Zero || NativeRuntimeHandle == nativeRuntimeHandle)
+            { return true; }
+            else
+            { throw new InvalidOperationException("A different native libclang-pathogen runtime was loaded by a different thread!"); }
+        }
+
         /// <summary>Explicitly installs the ClangSharp.Pathogen native runtime resolver</summary>
         /// <remarks>You generally do not need to call this method</remarks>
         public static void ExplicitlyInstallResolver()
@@ -45,7 +63,7 @@ namespace ClangSharp.Pathogen
             { return; }
 
             if (Interlocked.CompareExchange(ref NativeRuntimeHandle, nativeRuntimeHandle, IntPtr.Zero) != IntPtr.Zero)
-            { throw new InvalidOperationException("The native libclang runtime has already previously been loaded or overridden."); }
+            { throw new InvalidOperationException("The native libclang-pathogen runtime has already previously been loaded or overridden."); }
         }
 
         /// <summary>Verifies that the runtime used our resolver to resolve ClangSharp's native runtimes</summary>
@@ -90,11 +108,14 @@ namespace ClangSharp.Pathogen
                     goto case PathogenExtensions.LibraryFileName;
                 case PathogenExtensions.LibraryFileName:
                 {
+                    if (searchPath is not null)
+                    { Trace.WriteLine($"Non-null {nameof(DllImportSearchPath)} requested by P/Invoke to {libraryName} in {assembly.FullName} was ignored by {typeof(LibClangSharpResolver).FullName}."); }
+
                     // If we don't have a handle already, load libclang-pathogen using the runtime's default resolver
                     // (We do not want to use NativeLibrary.Load(string) since it does not search for platform-specific native runtimes.)
                     if (NativeRuntimeHandle == IntPtr.Zero)
                     {
-                        IntPtr handle = NativeLibrary.Load(PathogenExtensions.LibraryFileName, typeof(LibClangSharpResolver).Assembly, searchPath);
+                        IntPtr handle = NativeLibrary.Load(PathogenExtensions.LibraryFileName, typeof(LibClangSharpResolver).Assembly, null);
                         Interlocked.CompareExchange(ref NativeRuntimeHandle, handle, IntPtr.Zero);
                     }
 

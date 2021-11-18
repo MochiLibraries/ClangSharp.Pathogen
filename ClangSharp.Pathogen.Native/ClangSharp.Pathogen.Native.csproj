@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">$(NETCoreSdkRuntimeIdentifier)</RuntimeIdentifier>
+
+    <!-- ==============================================================================================================
+    Paths to LLVM things
+    =============================================================================================================== -->
+    <LibClangSubPath Condition="$(RuntimeIdentifier.StartsWith('win-'))">bin/libclang.dll</LibClangSubPath>
+    <LibClangSubPath Condition="$(RuntimeIdentifier.StartsWith('linux-'))">lib/libclang.so</LibClangSubPath>
+    <LibClangSubPath Condition="$(RuntimeIdentifier.StartsWith('osx-'))">lib/libclang.dylib</LibClangSubPath>
+    <LibClangPathogenFileName Condition="$(RuntimeIdentifier.StartsWith('win-'))">libclang-pathogen.dll</LibClangPathogenFileName>
+    <LibClangPathogenFileName Condition="$(RuntimeIdentifier.StartsWith('linux-'))">libclang-pathogen.so</LibClangPathogenFileName>
+    <LibClangPathogenFileName Condition="$(RuntimeIdentifier.StartsWith('osx-'))">libclang-pathogen.dylib</LibClangPathogenFileName>
+
+    <LibClangPath>$(LlvmBuildOutputRoot)$(RuntimeIdentifier)/$(LibClangSubPath)</LibClangPath>
+    <PathogenExtensionsCppPath>$(LlvmSourceRoot)clang/tools/libclang/PathogenExtensions.cpp</PathogenExtensionsCppPath>
+
+    <!-- ==============================================================================================================
+    Package Info
+    =============================================================================================================== -->
+    <PackageId>$(MSBuildProjectName).$(RuntimeIdentifier)</PackageId>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <Description>Native runtime support package for ClangSharp.Pathogen on $(RuntimeIdentifier).&#10;&#10;This package exists primarily to support Biohazrd and should only be used as instructed.</Description>
+    <!-- Microsoft is here because we embed components of libClangSharp -->
+    <Authors>LLVM Team, Microsoft, David Maas, and Contributors</Authors>
+    <!-- LLVM does not have a good canonical copyright string. They're supposed to put it in their source file as part of Apache 2.0 but they don't. -->
+    <Copyright>Pathogen extensions copyright David Maas and Contributors. libClangSharp copyright © Microsoft and Contributors. LLVM copyright (c) 2003-2019 University of Illinois at Urbana-Champaign, LLVM Team.</Copyright>
+
+    <!-- This package is only for native runtime, don't try to build/pack the .NET assembly or specify a framework dependency -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Condition="Exists('$(PathogenExtensionsCppPath)')" Include="$(PathogenExtensionsCppPath)" Link="PathogenExtensions.cpp" />
+    <None Condition="Exists('$(ClangLicensePath)')" Include="$(ClangLicensePath)" Link="LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
+    <None Include="$(LibClangPath)" Link="$(LibClangPathogenFileName)" Condition="Exists('$(LibClangPath)')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>true</Pack>
+      <PackagePath>runtimes/$(RuntimeIdentifier)/native/$(LibClangPathogenFileName)</PackagePath>
+    </None>
+  </ItemGroup>
+  <!-- Error if native runtime needs to be built or llvm-project is missing -->
+  <Target Name="_NativeRuntimeChecks" BeforeTargets="GetCopyToOutputDirectoryItems;Build;GenerateNuspec;Pack">
+    <!-- PathogenExtensions.cpp is only used to check if LLVM is cloned and it's our fork. Don't check for it on CI where we might not actually clone LLVM. -->
+    <Error Text="PathogenExtensions.cpp is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(PathogenExtensionsCppPath)') and '$(ContinuousIntegrationBuild)' != 'true'" />
+    <Error Text="Clang LICENSE.TXT is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(ClangLicensePath)')" />
+    <Error Text="Could not automatically determine LibClangSubPath based on runtime identifier '$(RuntimeIdentifier)'" Condition="'$(LibClangSubPath)' == ''" />
+    <Error Text="Could not automatically determine LibClangPathogenFileName based on runtime identifier '$(RuntimeIdentifier)'" Condition="'$(LibClangPathogenFileName)' == ''" />
+    <Error Text="Could not locate native runtime for '$(RuntimeIdentifier)' at '$(LibClangPath)', did you run build-native.cmd/sh?" Condition="!Exists('$(LibClangPath)')" />
+  </Target>
+</Project>

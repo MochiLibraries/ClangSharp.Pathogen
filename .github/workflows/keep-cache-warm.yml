@@ -25,19 +25,29 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
-            name: Windows
-            lib-path: build/bin/libclang.dll
+          - os: windows-2019
+            name: Windows x64
+            rid: win-x64
+            libclang-subpath: bin/libclang.dll
             build-command: ./build-native.cmd
-            artifact-name: LlvmBuildOutputs-Windows
           # We use Ubuntu 18.04 so that the binary is usable on systems using glibc 2.27 and later
           # If we want to support even older versions we should explore building libclang with https://github.com/wheybags/glibc_version_header
           - os: ubuntu-18.04
-            name: Linux
-            lib-path: build-linux/lib/libclang.so
-            clang-resource-dir: build-linux/lib/clang/
+            name: Linux x64
+            rid: linux-x64
+            libclang-subpath: lib/libclang.so
             build-command: ./build-native.sh
-            artifact-name: LlvmBuildOutputs-Linux
+          - os: ubuntu-arm64-latest
+            name: Linux ARM64
+            rid: linux-arm64
+            libclang-subpath: lib/libclang.so
+            build-command: ./build-native.sh
+            skip-python-install: true
+          - os: macos-10.15
+            name: MacOS x64
+            rid: osx-x64
+            libclang-subpath: lib/libclang.dylib
+            build-command: ./build-native.sh
     name: Warm cache - ${{matrix.name}}
     runs-on: ${{matrix.os}}
     steps:
@@ -49,6 +59,7 @@ jobs:
 
       # ----------------------------------------------------------------------- Setup Python
       - name: Setup Python 3.8
+        if: matrix.skip-python-install != true
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
@@ -63,16 +74,17 @@ jobs:
       - name: Install sccache
         id: sccache
         run: python .github/workflows/install-sccache.py
-      
+
       # ----------------------------------------------------------------------- Warm LLVM build outputs
       - name: Load cached LLVM build outputs
         id: cached-llvm
         uses: PathogenDavid/cache@no-save-v2
         with:
-          key: llvm-output-${{runner.os}}-${{steps.llvm.outputs.revision}}
+          key: llvm-output-${{matrix.rid}}-${{steps.llvm.outputs.revision}}
           path: |
-            ${{matrix.lib-path}}
-            ${{matrix.clang-resource-dir}}
+            bin/llvm/${{matrix.rid}}/${{matrix.libclang-subpath}}
+            bin/llvm/${{matrix.rid}}/lib/clang/
+            external/llvm-project/clang/LICENSE.TXT
 
       # ----------------------------------------------------------------------- Warm sccache cache
       - name: Load LLVM sccache
@@ -80,5 +92,5 @@ jobs:
         uses: PathogenDavid/cache@no-save-v2
         with:
           path: ${{steps.sccache.outputs.root-directory}}
-          key: sccache-cache-${{runner.os}}-${{steps.llvm.outputs.revision}}
-          restore-keys: sccache-cache-${{runner.os}}-
+          key: sccache-cache-${{matrix.rid}}-${{steps.llvm.outputs.revision}}
+          restore-keys: sccache-cache-${{matrix.rid}}-

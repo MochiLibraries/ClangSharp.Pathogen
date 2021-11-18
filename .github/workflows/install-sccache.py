@@ -44,7 +44,7 @@ name_in_tar = f"{download_file_name}/{binary_name}"
 # Figure out the sccache directory paths and create it if necessary
 # We assume our working directory is the repo root.
 # The binary is placed in a subdirectory of its download hash to ensure we don't re-use an old version.
-sccache_root = os.path.join(os.getcwd(), "build-sccache")
+sccache_root = os.path.join(os.getcwd(), "bin", "tools", "sccache")
 sccache_cache_directory = os.path.join(sccache_root, "cache")
 sccache_cache_log_file_path = os.path.join(sccache_root, "sccache.log")
 

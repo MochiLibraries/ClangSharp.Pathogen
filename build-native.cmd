@@ -1,11 +1,19 @@
 @echo off
 setlocal enabledelayedexpansion
 
+:: Start in the directory containing this script
+cd %~dp0
+
+:: Determine platform RID and build folder
+call tooling\determine-rid.cmd || exit /B !ERRORLEVEL!
+echo Building libclang for %PLATFORM_RID%...
+set BUILD_FOLDER=bin\llvm\%PLATFORM_RID%
+
 :: Initialize Visual Studio dev tools
-call tooling\vs-tools
+call tooling\vs-tools || exit /B !ERRORLEVEL!
 
 :: Initialize cmake (if necessary)
-if not exist build\build.ninja (
+if not exist %BUILD_FOLDER%\build.ninja (
     set CMAKE_EXTRA_ARGUMENTS=
 
     :: If sccache is installed, use it
@@ -17,7 +25,7 @@ if not exist build\build.ninja (
     )
 
     :: Configure
-    cmake -G "Ninja" -S external/llvm-project/llvm/ -B build ^
+    cmake -G "Ninja" -S external/llvm-project/llvm/ -B %BUILD_FOLDER% ^
         -DCMAKE_C_COMPILER=cl ^
         -DCMAKE_CXX_COMPILER=cl ^
         -DCMAKE_BUILD_TYPE=Release ^
@@ -28,4 +36,4 @@ if not exist build\build.ninja (
 )
 
 :: Invoke Ninja
-ninja -C build libclang
+ninja -C %BUILD_FOLDER% libclang

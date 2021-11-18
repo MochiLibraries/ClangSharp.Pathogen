@@ -20,6 +20,12 @@
 
     <!-- Embed untracked sources in the PDB -->
     <EmbedUntrackedSources Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</EmbedUntrackedSources>
+    
+    <!-- ClangSharp.Pathogen-specific -->
+    <LlvmBuildOutputRoot>$(MSBuildThisFileDirectory)../bin/llvm/</LlvmBuildOutputRoot>
+    <LlvmVersion>12.0.1</LlvmVersion>
+    <LlvmSourceRoot>$(MSBuildThisFileDirectory)../external/llvm-project/</LlvmSourceRoot>
+    <ClangLicensePath>$(LlvmSourceRoot)clang/LICENSE.TXT</ClangLicensePath>
   </PropertyGroup>
   <ItemGroup>
     <!-- Enable Source Link -->
