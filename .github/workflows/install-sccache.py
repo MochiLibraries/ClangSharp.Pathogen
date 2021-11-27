@@ -46,6 +46,7 @@ name_in_tar = f"{download_file_name}/{binary_name}"
 # The binary is placed in a subdirectory of its download hash to ensure we don't re-use an old version.
 sccache_root = os.path.join(os.getcwd(), "build-sccache")
 sccache_cache_directory = os.path.join(sccache_root, "cache")
+sccache_cache_log_file_path = os.path.join(sccache_root, "sccache.log")
 
 sccache_directory = os.path.join(sccache_root, expected_hash)
 sccache_binary_location = os.path.join(sccache_directory, binary_name)
@@ -53,7 +54,10 @@ os.makedirs(sccache_directory, exist_ok=True)
 
 # Add sccache to the workspace path and configure sccache's cache directory
 gha.set_output('root-directory', sccache_root)
+gha.set_output('log-file-path', sccache_cache_log_file_path)
 gha.set_environment_variable('SCCACHE_DIR', sccache_cache_directory)
+gha.set_environment_variable('SCCACHE_ERROR_LOG', sccache_cache_log_file_path)
+gha.set_environment_variable('SCCACHE_LOG', 'info')
 gha.add_path(sccache_directory)
 
 # If the output path already exists, no need to download

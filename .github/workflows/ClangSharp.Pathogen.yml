@@ -82,7 +82,8 @@ jobs:
 
       - name: Load LLVM sccache
         id: cached-sccache
-        if: steps.cached-llvm.outputs.cache-hit != 'true'
+        # Always save the (potentially partial) sccache database so it can be used to accelerate subsequent builds when an intermittent failure occurs
+        if: steps.cached-llvm.outputs.cache-hit != 'true' && always()
         uses: actions/cache@v2
         # If you change this configuration make sure to update keep-cache-warm.yml as well.
         with:
@@ -105,8 +106,17 @@ jobs:
         run: ${{matrix.build-command}}
 
       - name: Show sccache statistics
-        if: steps.cached-llvm.outputs.cache-hit != 'true'
-        run: sccache --show-stats
+        if: steps.cached-llvm.outputs.cache-hit != 'true' && always()
+        run: sccache --show-stats 2>&1 | tee ${{steps.sccache.outputs.root-directory}}/sccache-stats.txt
+
+      - name: Save sccache logs
+        uses: actions/upload-artifact@v2
+        if: steps.cached-llvm.outputs.cache-hit != 'true' && always()
+        with:
+          name: llvm-${{matrix.rid}}-sccache-logs
+          path: |
+            ${{steps.sccache.outputs.log-file-path}}
+            ${{steps.sccache.outputs.root-directory}}/sccache-stats.txt
 
       # The GitHub Actions cache gets confused by the symlink so we need to remove it
       - name: Unsymlink libclang
