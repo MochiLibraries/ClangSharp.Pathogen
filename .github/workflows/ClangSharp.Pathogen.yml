@@ -309,12 +309,54 @@ jobs:
           path: '**'
 
   # =====================================================================================================================================================================
+  # Verify Clang Resources Match
+  # =====================================================================================================================================================================
+  # We only use the linux-x64 build to publish ClangSharp.Pathogen.ClangResources, so we want to ensure they match across all builds
+  verify-clang-resources:
+    name: Verify Clang Resources
+    runs-on: ubuntu-latest
+    needs: build-llvm
+    steps:
+      # ----------------------------------------------------------------------- Download LLVM Build Outputs
+      - name: Download LLVM Windows x64 build output
+        if: always()
+        uses: actions/download-artifact@v2
+        with:
+          name: llvm-win-x64
+      - name: Download LLVM Linux x64 build output
+        if: always()
+        uses: actions/download-artifact@v2
+        with:
+          name: llvm-linux-x64
+      - name: Download LLVM Linux ARM64 build output
+        if: always()
+        uses: actions/download-artifact@v2
+        with:
+          name: llvm-linux-arm64
+      - name: Download LLVM macOS x64 build output
+        if: always()
+        uses: actions/download-artifact@v2
+        with:
+          name: llvm-osx-x64
+
+      # ----------------------------------------------------------------------- Verify
+      - name: Verify Windows x64 matches Linux x64
+        if: always()
+        run: diff --unified --strip-trailing-cr --recursive bin/llvm/linux-x64/lib/clang/ bin/llvm/win-x64/lib/clang/
+      - name: Verify Linux ARM64 matches Linux x64
+        if: always()
+        run: diff --unified --strip-trailing-cr --recursive bin/llvm/linux-x64/lib/clang/ bin/llvm/linux-arm64/lib/clang/
+      - name: Verify macOS x64 matches Linux x64
+        if: always()
+        run: diff --unified --strip-trailing-cr --recursive bin/llvm/linux-x64/lib/clang/ bin/llvm/osx-x64/lib/clang/
+
+  # =====================================================================================================================================================================
   # Publish NuGet Packages to GitHub
   # =====================================================================================================================================================================
   publish-packages-github:
     name: Publish to GitHub
     runs-on: ubuntu-latest
-    needs: coalesce-packages
+    needs: [coalesce-packages, verify-clang-resources]
     # Pushes to main always publish CI packages
     # Published releases always publish packages
     # A manual workflow only publishes packages if explicitly enabled
@@ -380,7 +422,7 @@ jobs:
   publish-packages-nuget-org:
     name: Publish to NuGet.org
     runs-on: ubuntu-latest
-    needs: coalesce-packages
+    needs: [coalesce-packages, verify-clang-resources]
     environment: NuGet.org
     # Release builds always publish packages to NuGet.org
     # Workflow dispatch builds will only publish packages if enabled and an explicit version number is given
@@ -410,7 +452,7 @@ jobs:
   # =====================================================================================================================================================================
   send-ci-failure-notification:
     name: Send CI Failure Notification
-    needs: [build-llvm, build-dotnet, coalesce-packages, publish-packages-github, publish-packages-nuget-org]
+    needs: [build-llvm, build-dotnet, coalesce-packages, verify-clang-resources, publish-packages-github, publish-packages-nuget-org]
     if: failure() && github.event_name != 'pull_request'
     continue-on-error: true
     runs-on: ubuntu-latest
