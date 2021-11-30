@@ -9,7 +9,7 @@
 
     <!-- Common NuGet Package Properties -->
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageProjectUrl>https://github.com/InfectedLibraries</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/MochiLibraries</PackageProjectUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
     <!-- Ignore warnings about stable packages referencing pre-release ones. -->

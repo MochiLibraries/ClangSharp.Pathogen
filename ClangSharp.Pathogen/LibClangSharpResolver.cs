@@ -10,9 +10,9 @@ namespace ClangSharp.Pathogen
 {
     /// <summary>Handles resolving the native runtimes for ClangSharp and ClangSharp.Pathogen.</summary>
     /// <remarks>
-    /// For the reasons described in https://github.com/InfectedLibraries/llvm-project/issues/2#issuecomment-712897834 we use the same (modified) libclang DLL for
+    /// For the reasons described in https://github.com/MochiLibraries/llvm-project/issues/2#issuecomment-712897834 we use the same (modified) libclang DLL for
     /// libclang, libClangSharp, and the ClangSharp.Pathogen native runtime. This class manages redirecting the library references within ClangSharp to this central instance.
-    /// 
+    ///
     /// Additionally, this class allows you to override the native runtime used for all of the above as well as verify this resolver was used to resolve libclang for ClangSharp.
     /// </remarks>
     public static class LibClangSharpResolver
