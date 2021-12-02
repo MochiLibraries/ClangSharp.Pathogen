@@ -15,16 +15,19 @@ namespace ClangSharp.Pathogen
         private readonly byte _IsFunctionLike;
         private readonly byte _IsBuiltinMacro;
         private readonly byte _HasCommaPasting;
+        private readonly byte _IsUsedForHeaderGuard;
         public readonly PathogenMacroVardicKind VardicKind;
         public readonly int ParameterCount;
         private readonly byte** ParameterNames;
         private readonly ulong* ParameterNameLengths;
+        public readonly int TokenCount;
 
         public string Name => Encoding.UTF8.GetString(_Name, checked((int)_NameLength));
         public bool WasUndefined => _WasUndefined != 0;
         public bool IsFunctionLike => _IsFunctionLike != 0;
         public bool IsBuiltinMacro => _IsBuiltinMacro != 0;
         public bool HasCommaPasting => _HasCommaPasting != 0;
+        public bool IsUsedForHeaderGuard => _IsUsedForHeaderGuard != 0;
 
         public string GetParameterName(int index)
         {
