@@ -102,6 +102,9 @@ jobs:
         uses: actions/cache@v2
         # If you change this configuration make sure to update keep-cache-warm.yml as well.
         with:
+          # Note that this implicitly includes the sccache log
+          # sccache writes a startup message to the log so you'll be able to tell which section of the log is the current run
+          # (and see any logs from previous runs which affected this cache)
           path: ${{steps.sccache.outputs.root-directory}}
           key: sccache-cache-${{matrix.rid}}-${{steps.llvm.outputs.revision}}
           restore-keys: sccache-cache-${{matrix.rid}}-
@@ -125,7 +128,11 @@ jobs:
 
       - name: Show sccache statistics
         if: steps.cached-llvm.outputs.cache-hit != 'true' && always()
-        run: sccache --show-stats 2>&1 | tee ${{steps.sccache.outputs.root-directory}}/sccache-stats.txt
+        run: |
+          sccache --show-stats 2>&1 | tee ${{steps.sccache.outputs.root-directory}}/sccache-stats.txt
+          # Stop the server so it releases the lock on the log on Windows
+          # (Without this the sccache cache fails to save.)
+          sccache --stop-server
 
       - name: Save sccache logs
         uses: actions/upload-artifact@v2
