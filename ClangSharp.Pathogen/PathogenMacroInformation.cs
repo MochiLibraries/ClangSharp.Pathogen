@@ -21,6 +21,8 @@ namespace ClangSharp.Pathogen
         private readonly byte** ParameterNames;
         private readonly ulong* ParameterNameLengths;
         public readonly int TokenCount;
+        private readonly byte* _RawValueSourceString;
+        private readonly ulong _RawValueSourceStringLength;
 
         public string Name => Encoding.UTF8.GetString(_Name, checked((int)_NameLength));
         public bool WasUndefined => _WasUndefined != 0;
@@ -28,6 +30,7 @@ namespace ClangSharp.Pathogen
         public bool IsBuiltinMacro => _IsBuiltinMacro != 0;
         public bool HasCommaPasting => _HasCommaPasting != 0;
         public bool IsUsedForHeaderGuard => _IsUsedForHeaderGuard != 0;
+        public string RawValueSourceString => Encoding.UTF8.GetString(_RawValueSourceString, checked((int)_RawValueSourceStringLength));
 
         public string GetParameterName(int index)
         {
