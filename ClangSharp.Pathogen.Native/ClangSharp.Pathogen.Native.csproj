@@ -20,12 +20,12 @@
     Package Info
     =============================================================================================================== -->
     <PackageId>$(MSBuildProjectName).$(RuntimeIdentifier)</PackageId>
-    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageLicenseFile>LICENSE-COMBINED.md</PackageLicenseFile>
     <Description>Native runtime support package for ClangSharp.Pathogen on $(RuntimeIdentifier).&#10;&#10;This package exists primarily to support Biohazrd and should only be used as instructed.</Description>
     <!-- Microsoft is here because we embed components of libClangSharp -->
-    <Authors>LLVM Team, Microsoft, David Maas, and Contributors</Authors>
+    <Authors>LLVM Team, .NET Foundation, David Maas, and Contributors</Authors>
     <!-- LLVM does not have a good canonical copyright string. They're supposed to put it in their source file as part of Apache 2.0 but they don't. -->
-    <Copyright>Pathogen extensions copyright David Maas and Contributors. libClangSharp copyright © Microsoft and Contributors. LLVM copyright (c) 2003-2019 University of Illinois at Urbana-Champaign, LLVM Team.</Copyright>
+    <Copyright>Pathogen extensions copyright David Maas and Contributors. libClangSharp copyright © .NET Foundation and Contributors. LLVM copyright (c) 2003-2019 University of Illinois at Urbana-Champaign, LLVM Team.</Copyright>
 
     <!-- This package is only for native runtime, don't try to build/pack the .NET assembly or specify a framework dependency -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -33,7 +33,8 @@
   </PropertyGroup>
   <ItemGroup>
     <None Condition="Exists('$(PathogenExtensionsCppPath)')" Include="$(PathogenExtensionsCppPath)" Link="PathogenExtensions.cpp" />
-    <None Condition="Exists('$(ClangLicensePath)')" Include="$(ClangLicensePath)" Link="LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
+    <None Condition="Exists('$(ClangLicensePath)')" Include="$(ClangLicensePath)" Link="LICENSE-LLVM.txt" Pack="true" PackagePath="LICENSE-LLVM.txt" />
+    <None Condition="Exists('$(LibClangSharpLicensePath)')" Include="$(LibClangSharpLicensePath)" Link="LICENSE-LIBCLANGSHARP.md" Pack="true" PackagePath="LICENSE-LIBCLANGSHARP.md" />
     <None Include="$(LibClangPath)" Link="$(LibClangPathogenFileName)" Condition="Exists('$(LibClangPath)')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Pack>true</Pack>
@@ -45,8 +46,51 @@
     <!-- PathogenExtensions.cpp is only used to check if LLVM is cloned and it's our fork. Don't check for it on CI where we might not actually clone LLVM. -->
     <Error Text="PathogenExtensions.cpp is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(PathogenExtensionsCppPath)') and '$(ContinuousIntegrationBuild)' != 'true'" />
     <Error Text="Clang LICENSE.TXT is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(ClangLicensePath)')" />
+    <Error Text="libClangSharp LICENSE.md is missing, ensure Git submodules are up-to-date." Condition="!Exists('$(LibClangSharpLicensePath)')" />
     <Error Text="Could not automatically determine LibClangSubPath based on runtime identifier '$(RuntimeIdentifier)'" Condition="'$(LibClangSubPath)' == ''" />
     <Error Text="Could not automatically determine LibClangPathogenFileName based on runtime identifier '$(RuntimeIdentifier)'" Condition="'$(LibClangPathogenFileName)' == ''" />
     <Error Text="Could not locate native runtime for '$(RuntimeIdentifier)' at '$(LibClangPath)', did you run build-native.cmd/sh?" Condition="!Exists('$(LibClangPath)')" />
+  </Target>
+  <UsingTask TaskName="_GenerateCombinedLicenseFileTask" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <PackageId ParameterType="System.String" Required="true" />
+      <Path ParameterType="System.String" Required="true" />
+      <ClangLicensePath ParameterType="System.String" Required="true" />
+      <LibClangSharpLicensePath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        string[] clangLicense = File.ReadAllLines(ClangLicensePath);
+        string[] libClangSharpLicense = File.ReadAllLines(LibClangSharpLicensePath);
+        
+        using StreamWriter f = new(Path);
+        f.WriteLine($"{PackageId} incorporates multiple components licensed as follows.");
+        f.WriteLine();
+        f.WriteLine("# The LLVM Project");
+        f.WriteLine();
+        f.WriteLine("```");
+        foreach (string line in clangLicense)
+        { f.WriteLine(line); }
+        f.WriteLine("```");
+        f.WriteLine();
+        f.WriteLine("# libClangSharp");
+        f.WriteLine();
+        foreach (string line in libClangSharpLicense)
+        { f.WriteLine($"> {line}"); }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+  <Target Name="_GenerateCombinedLicenseFile" DependsOnTargets="_NativeRuntimeChecks" BeforeTargets="GetCopyToOutputDirectoryItems;Build;GenerateNuspec;Pack;_GetPackageFiles">
+    <PropertyGroup>
+      <_CombinedLicenseFile>$(IntermediateOutputPath)LICENSE-COMBINED.md</_CombinedLicenseFile>
+    </PropertyGroup>
+    <_GenerateCombinedLicenseFileTask PackageId="$(PackageId)" Path="$(_CombinedLicenseFile)" ClangLicensePath="$(ClangLicensePath)" LibClangSharpLicensePath="$(LibClangSharpLicensePath)" />
+    <ItemGroup>
+      <None Include="$(_CombinedLicenseFile)" Visible="false" Pack="true" PackagePath="LICENSE-COMBINED.md" />
+    </ItemGroup>
   </Target>
 </Project>

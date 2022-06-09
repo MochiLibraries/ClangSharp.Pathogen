@@ -23,9 +23,10 @@
     
     <!-- ClangSharp.Pathogen-specific -->
     <LlvmBuildOutputRoot>$(MSBuildThisFileDirectory)../bin/llvm/</LlvmBuildOutputRoot>
-    <LlvmVersion>12.0.1</LlvmVersion>
+    <LlvmVersion>14.0.4</LlvmVersion>
     <LlvmSourceRoot>$(MSBuildThisFileDirectory)../external/llvm-project/</LlvmSourceRoot>
     <ClangLicensePath>$(LlvmSourceRoot)clang/LICENSE.TXT</ClangLicensePath>
+    <LibClangSharpLicensePath>$(LlvmSourceRoot)clang/tools/libclang/libClangSharp/LICENSE.md</LibClangSharpLicensePath>
   </PropertyGroup>
   <ItemGroup>
     <!-- Enable Source Link -->

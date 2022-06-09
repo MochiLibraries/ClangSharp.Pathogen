@@ -17,6 +17,7 @@
         SpirFunction,
         OpenCLKernel,
         Swift,
+        SwiftAsync,
         PreserveMost,
         PreserveAll,
         AArch64VectorCall,

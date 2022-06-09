@@ -62,7 +62,8 @@ namespace ClangSharp.Pathogen
             if (NativeRuntimeHandle == nativeRuntimeHandle)
             { return; }
 
-            if (Interlocked.CompareExchange(ref NativeRuntimeHandle, nativeRuntimeHandle, IntPtr.Zero) != IntPtr.Zero)
+            IntPtr oldHandle = Interlocked.CompareExchange(ref NativeRuntimeHandle, nativeRuntimeHandle, IntPtr.Zero);
+            if (oldHandle != IntPtr.Zero && oldHandle != nativeRuntimeHandle)
             { throw new InvalidOperationException("The native libclang-pathogen runtime has already previously been loaded or overridden."); }
         }
 

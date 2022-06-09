@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     
     <!-- Package Info -->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -10,8 +10,8 @@
     <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <!-- This is pinned to a specific version since ClangSharp.Pathogen.Runtime includes libClangSharp -->
-    <PackageReference Include="ClangSharp" Version="[12.0.0-beta2]" />
+    <!-- This is pinned to a specific version since ClangSharp.Pathogen.Native includes libClangSharp -->
+    <PackageReference Include="ClangSharp" Version="[14.0.0-beta2]" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE.txt" Pack="true" PackagePath="" Visible="false" />

@@ -147,7 +147,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
 
       - name: Configure versioning
         run: python .github/workflows/configure-build.py
@@ -235,7 +235,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
 
       # ----------------------------------------------------------------------- Configure Versioning
       - name: Configure build
@@ -373,7 +373,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
 
       # ----------------------------------------------------------------------- Download built packages
       - name: Download built packages
@@ -418,7 +418,7 @@ jobs:
 
       # ----------------------------------------------------------------------- Push to GitHub Packages
       - name: Push to GitHub Packages
-        run: dotnet nuget push "*.nupkg" --skip-duplicate --no-symbols true --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/${{github.repository_owner}}
+        run: dotnet nuget push "*.nupkg" --skip-duplicate --no-symbols --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/${{github.repository_owner}}
         env:
           # This is a workaround for https://github.com/NuGet/Home/issues/9775
           DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
@@ -439,7 +439,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
 
       # ----------------------------------------------------------------------- Download built packages
       - name: Download built packages

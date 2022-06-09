@@ -15,6 +15,7 @@
         CXX_FAST_TLS = 17,
         Tail = 18,
         CFGuard_Check = 19,
+        SwiftTail = 20,
         FirstTargetCC = 64,
         X86_StdCall = 64,
         X86_FastCall = 65,
@@ -49,6 +50,8 @@
         AMDGPU_ES = 96,
         AArch64_VectorCall = 97,
         AArch64_SVE_VectorCall = 98,
-        WASM_EmscriptenInvoke = 99
+        WASM_EmscriptenInvoke = 99,
+        AMDGPU_Gfx = 100,
+        M68k_INTR = 101,
     }
 }
