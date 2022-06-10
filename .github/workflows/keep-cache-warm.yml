@@ -85,6 +85,7 @@ jobs:
             bin/llvm/${{matrix.rid}}/${{matrix.libclang-subpath}}
             bin/llvm/${{matrix.rid}}/lib/clang/
             external/llvm-project/clang/LICENSE.TXT
+            external/llvm-project/clang/tools/libclang/libClangSharp/LICENSE.md
 
       # ----------------------------------------------------------------------- Warm sccache cache
       - name: Load LLVM sccache
