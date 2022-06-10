@@ -11,28 +11,28 @@ import urllib.request
 import gha
 
 # Configuration
-version = "v0.2.15"
+version = "v0.3.0"
 url_base = f"https://github.com/mozilla/sccache/releases/download/{version}/"
 
 platform = f"{platform.system()}-{platform.machine()}"
 if platform == 'Windows-AMD64':
-    expected_hash = "3dfecdbb85561c55e899d3ad039c671f806d283c49da0721c2ef5c1310d87965"
+    expected_hash = "f25e927584d79d0d5ad489e04ef01b058dad47ef2c1633a13d4c69dfb83ba2be"
     download_file_name = f"sccache-{version}-x86_64-pc-windows-msvc"
     binary_name = "sccache.exe"
 elif platform == 'Linux-x86_64':
-    expected_hash = "e5d03a9aa3b9fac7e490391bbe22d4f42c840d31ef9eaf127a03101930cbb7ca"
+    expected_hash = "e6cd8485f93d683a49c83796b9986f090901765aa4feb40d191b03ea770311d8"
     download_file_name = f"sccache-{version}-x86_64-unknown-linux-musl"
     binary_name = "sccache"
 elif platform == 'Linux-aarch64':
-    expected_hash = "90d91d21a767e3f558196dbd52395f6475c08de5c4951a4c8049575fa6894489"
+    expected_hash = "9ae4e1056b3d51546fa42a4cbf8e95aa84a4b2b4c838f9114e01b7fef5c0abd0"
     download_file_name = f"sccache-{version}-aarch64-unknown-linux-musl"
     binary_name = "sccache"
 elif platform == 'Darwin-x86_64':
-    expected_hash = "908e939ea3513b52af03878753a58e7c09898991905b1ae3c137bb8f10fa1be2"
+    expected_hash = "61c16fd36e32cdc923b66e4f95cb367494702f60f6d90659af1af84c3efb11eb"
     download_file_name = f"sccache-{version}-x86_64-apple-darwin"
     binary_name = "sccache"
 elif platform == 'Darwin-arm64':
-    expected_hash = "4120626b3a13b8e615e995b926db4166dc2b34274908b8f159ca65be4928b32a"
+    expected_hash = "65d0a04fac51eaeeadd72d3f7eee3fdc27409aaf23b97945ea537e92bd0b0f0d"
     download_file_name = f"sccache-{version}-aarch64-apple-darwin"
     binary_name = "sccache"
 else:
