@@ -43,8 +43,8 @@ jobs:
             libclang-subpath: lib/libclang.so
             build-command: ./build-native.sh
             skip-python-install: true
-          - os: macos-10.15
-            name: MacOS x64
+          - os: macos-12
+            name: macOS x64
             rid: osx-x64
             libclang-subpath: lib/libclang.dylib
             build-command: ./build-native.sh
