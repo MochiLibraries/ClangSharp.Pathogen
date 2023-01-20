@@ -1,7 +1,7 @@
 # ClangSharp + Pathogen Extensions
 
 [![MIT Licensed](https://img.shields.io/github/license/mochilibraries/clangsharp.pathogen?style=flat-square)](LICENSE.txt)
-[![CI Status](https://img.shields.io/github/workflow/status/mochilibraries/clangsharp.pathogen/ClangSharp.Pathogen?style=flat-square)](https://github.com/MochiLibraries/ClangSharp.Pathogen/actions?query=workflow%3AClangSharp.Pathogen+branch%3Amain)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/mochilibraries/clangsharp.pathogen/ClangSharp.Pathogen.yml?branch=main&style=flat-square&label=CI)](https://github.com/MochiLibraries/ClangSharp.Pathogen/actions?query=workflow%3AClangSharp.Pathogen+branch%3Amain)
 [![NuGet Version](https://img.shields.io/nuget/v/ClangSharp.Pathogen?style=flat-square)](https://www.nuget.org/packages/ClangSharp.Pathogen/)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-lightgrey?logo=github&style=flat-square)](https://github.com/sponsors/PathogenDavid)
 
